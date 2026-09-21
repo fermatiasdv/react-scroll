@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from 'react'
+import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react'
+import { COLLAPSE_TO_CENTER_MS } from '../config/timing.js'
 import { BottleRig } from '../three/BottleRig.js'
 import BottlePoster from './BottlePoster.jsx'
 
@@ -20,13 +21,37 @@ const POSTER_LAYER = { position: 'absolute', inset: 0 }
 // Cambiar de fragancia sólo cambia la textura de la etiqueta (`labelUrl`), sin recrear nada. El
 // póster (RF-10.3) queda encima del canvas hasta que éste pintó su primer frame. Es el link de la
 // botella (`.fs-image-product`), posicionado y dimensionado como el póster (RF-10.2).
-export default function Bottle({ x, y, size, slug, name, modelUrl, labelUrl, posterSrc }) {
+//
+// Por `ref` expone los giros de la transición (RF-07): medio giro de frente a espaldas al salir
+// (`spinOut`, easeInCubic) y de espaldas a frente al entrar (`swapAndSpinIn`, easeOutCubic), con la
+// misma duración para que la velocidad angular coincida en el empalme y no haya frenazo.
+const Bottle = forwardRef(function Bottle({ x, y, size, slug, name, modelUrl, labelUrl, posterSrc }, ref) {
   const hostRef = useRef(null)
   const rigRef = useRef(null)
   const latest = useRef({ labelUrl, size })
   // Modelo para el que el canvas ya pintó su primer frame; si cambia el modelo, vuelve el póster.
   const [readyModelUrl, setReadyModelUrl] = useState(null)
   const ready = readyModelUrl === modelUrl
+
+  useImperativeHandle(ref, () => ({
+    // t = 0: de frente a espaldas.
+    spinOut() {
+      rigRef.current?.spin({ from: 0, to: Math.PI, durationMs: COLLAPSE_TO_CENTER_MS, easing: 'in' })
+    },
+    // t = 500: la etiqueta cambia con la botella de espaldas y termina el giro hasta quedar de frente.
+    // No espera a la textura: el giro tiene que empalmar con el de salida; la etiqueta recién se ve
+    // pasados los 270°.
+    swapAndSpinIn(nextLabelUrl) {
+      const rig = rigRef.current
+      if (!rig) return
+      rig.setLabel(nextLabelUrl)
+      rig.spin({ from: Math.PI, to: Math.PI * 2, durationMs: COLLAPSE_TO_CENTER_MS, easing: 'out' })
+    },
+    // Transición cancelada (RF-07.4): corta el giro y deja la botella de frente.
+    cancelSpin() {
+      rigRef.current?.setYaw(0)
+    },
+  }), [])
 
   // Va antes que el efecto de creación, así al montar ya tiene los valores vigentes.
   useEffect(() => {
@@ -110,4 +135,6 @@ export default function Bottle({ x, y, size, slug, name, modelUrl, labelUrl, pos
       )}
     </a>
   )
-}
+})
+
+export default Bottle

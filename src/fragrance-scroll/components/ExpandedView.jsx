@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react'
 import { BACKGROUND_TRANSITION_MS, LABEL_TRANSITION_MS, WORD_FADE_MS } from '../config/timing.js'
 import { useNavigation } from '../hooks/useNavigation.js'
 import { useViewport } from '../hooks/useViewport.js'
@@ -10,8 +11,12 @@ import CloseButton from './CloseButton.jsx'
 import IngredientImage from './IngredientImage.jsx'
 import Panel from './Panel.jsx'
 
-// Pantalla del modo desplegado (RF-03, RF-04, RF-06). Por ahora la fragancia cambia de golpe, a los
-// COLLAPSE_TO_CENTER_MS del gesto y sin coreografía (T-4.2).
+// Pantalla del modo desplegado (RF-03, RF-04, RF-06, RF-07). La coreografía de la transición se
+// deriva de `navigation.phase` (design §4.11), con COLLAPSE_TO_CENTER_MS como única constante:
+//  - t = 0 (`leaving`): la botella gira de frente a espaldas, el ingrediente sale (fade y zoom) y el
+//    fondo hace el crossfade hacia el de la fragancia destino. El panel no se mueve todavía.
+//  - t = 500 (`entering`, el índice ya cambió): la etiqueta cambia con la botella de espaldas y ésta
+//    termina el giro; entran el ingrediente y el panel nuevos (el panel viejo se desmonta).
 export default function ExpandedView({ assets, fragrances, initialSlug, onCloseExpanded }) {
   const viewport = useViewport()
   const navigation = useNavigation({
@@ -21,6 +26,22 @@ export default function ExpandedView({ assets, fragrances, initialSlug, onCloseE
   })
   const index = navigation.index
   const fragrance = fragrances[index]
+  const { phase } = navigation
+  const bottleRef = useRef(null)
+  const previousPhase = useRef(phase)
+  const labelUrl = assets.labels[fragrance.slug] ?? assets.labels.default
+  // El fondo cruza hacia el destino desde t = 0, antes de que cambie el índice.
+  const backgroundIndex = navigation.pendingIndex ?? index
+
+  useEffect(() => {
+    const previous = previousPhase.current
+    previousPhase.current = phase
+    if (previous === phase) return // sólo cambió la etiqueta (reinicio), no hay transición
+    if (phase === 'leaving') bottleRef.current?.spinOut()
+    else if (phase === 'entering') bottleRef.current?.swapAndSpinIn(labelUrl)
+    // De `leaving` directo a `idle` es una transición cancelada (RF-07.4): ✕ o reinicio.
+    else if (previous === 'leaving') bottleRef.current?.cancelSpin()
+  }, [phase, labelUrl])
 
   const style = {
     '--fs-label-transition-ms': `${LABEL_TRANSITION_MS}ms`,
@@ -45,16 +66,23 @@ export default function ExpandedView({ assets, fragrances, initialSlug, onCloseE
           y={scene.ingredient.y}
           height={scene.ingredient.height}
           stretch={scene.ingredient.stretch}
+          hidden={phase === 'leaving'}
         />
-        <Panel title={scene.title} ingredientsLine={scene.ingredientsLine} />
+        <Panel
+          key={index}
+          title={scene.title}
+          ingredientsLine={scene.ingredientsLine}
+          enterDirection={phase === 'entering' ? navigation.direction : null}
+        />
         <Bottle
+          ref={bottleRef}
           x={scene.product.x}
           y={scene.product.y}
           size={scene.product.size}
           slug={fragrance.slug}
           name={fragrance.name}
           modelUrl={assets.model}
-          labelUrl={assets.labels[fragrance.slug] ?? assets.labels.default}
+          labelUrl={labelUrl}
           posterSrc={assets.posters[fragrance.slug]}
         />
       </>
@@ -63,7 +91,7 @@ export default function ExpandedView({ assets, fragrances, initialSlug, onCloseE
 
   return (
     <div className="fs-stage" style={style}>
-      <Background src={assets.backgrounds[index % assets.backgrounds.length]} />
+      <Background src={assets.backgrounds[backgroundIndex % assets.backgrounds.length]} />
       <div className="fs-overlay" aria-hidden="true" />
       <div className="fs-content" aria-hidden="true">
         {items}

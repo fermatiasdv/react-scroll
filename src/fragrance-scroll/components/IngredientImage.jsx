@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { COLLAPSE_TO_CENTER_MS, INGREDIENT_ZOOM_SCALE } from '../config/timing.js'
 
 // Razón ancho/alto natural de la imagen, o null si todavía no cargó.
 function naturalRatio(img) {
@@ -8,7 +9,11 @@ function naturalRatio(img) {
 // Imagen fija de ingrediente (RF-03.4), como `createImageElement` de L:scroll-styles.js: el alto
 // es el de la botella y el ancho sale del aspect ratio real. Con `stretch` (Painkiller) el ancho
 // se calcula con la razón natural de la imagen; hasta medirla queda en `auto`.
-export default function IngredientImage({ src, x, y, height, stretch }) {
+//
+// `hidden` es el estado de salida (RF-07.1): opacidad 0 y zoom INGREDIENT_ZOOM_SCALE. Pasar de uno a
+// otro dura COLLAPSE_TO_CENTER_MS, tanto al salir (t = 0) como al entrar (t = 500), como en
+// `collapseIngredientsToCenter` y `transitionDisplay` de L:scroll-styles.js.
+export default function IngredientImage({ src, x, y, height, stretch, hidden = false }) {
   const imgRef = useRef(null)
   // Se guarda junto con su `src`, para no arrastrar la razón de otra imagen.
   const [measured, setMeasured] = useState(null)
@@ -24,7 +29,17 @@ export default function IngredientImage({ src, x, y, height, stretch }) {
     if (ratio) setMeasured({ src, ratio })
   }, [src, stretch])
 
-  const style = { left: x, top: y, opacity: 1, height, width: 'auto', maxWidth: 'none', maxHeight: 'none' }
+  const style = {
+    left: x,
+    top: y,
+    opacity: hidden ? 0 : 1,
+    transform: `translate(-50%, -50%) scale(${hidden ? INGREDIENT_ZOOM_SCALE : 1})`,
+    transitionDuration: `${COLLAPSE_TO_CENTER_MS}ms`,
+    height,
+    width: 'auto',
+    maxWidth: 'none',
+    maxHeight: 'none',
+  }
   if (stretch) {
     const { scaleX = 1, scaleY = 1 } = stretch
     style.height = height * scaleY
