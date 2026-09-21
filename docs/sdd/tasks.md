@@ -280,7 +280,7 @@
 
 - **Estado:** pendiente
 - **Archivos permitidos:** `docs/**` (sólo para registrar resultados).
-- **Pasos:** correr `/sdd-guard auditar`: cada RF y RNF tiene que tener implementación y verificación; cada AJUSTE tiene que estar reflejado en el código con su comentario.
+- **Pasos:** pedir `auditar` (ver `CLAUDE.md`): cada RF y RNF tiene que tener implementación y verificación; cada AJUSTE tiene que estar reflejado en el código con su comentario.
 - **Aceptación:** un informe sin desvíos, o con desvíos convertidos en tareas nuevas.
 
 ## Fase 7: Tapcart (bloqueada)

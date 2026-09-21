@@ -2,7 +2,7 @@
 
 Esta migración se hace con **Spec-Driven Development (SDD)**: primero se escribe y se aprueba **qué** se construye (spec) y **cómo** (diseño), después se descompone en tareas, y recién ahí se escribe código, **una tarea a la vez y sólo con el OK explícito del usuario**.
 
-Esta guía está pensada para correr la migración con **Claude Sonnet** en Claude Code, con el skill `sdd-guard` como guardián del proceso.
+Esta guía está pensada para correr la migración con **Claude Sonnet** en Claude Code. Las reglas que el agente tiene que respetar están en el [`CLAUDE.md`](../../CLAUDE.md) de la raíz, que Claude Code carga automáticamente en cada sesión.
 
 ## Documentos
 
@@ -33,71 +33,46 @@ La guía original de migración en PDF está **desactualizada en varios puntos**
 │ 1. Elegir  │ → │ 2. Plan de   │ → │ 3. OK del │ → │ 4. Imple-   │ → │ 5. Verificar │
 │    tarea   │   │    la tarea  │   │   usuario │   │    mentar   │   │  y cerrar    │
 └────────────┘   └──────────────┘   └───────────┘   └─────────────┘   └──────────────┘
-                   (sin código)      "OK T-x.y"      (sólo archivos     (checklist del
-                                                       permitidos)       skill + estado)
+                   (sin código)      "OK T-x.y"      (sólo archivos     (checklist de
+                                                       permitidos)       CLAUDE.md +
+                                                                         commit)
 ```
 
 1. **Elegir la tarea:** la próxima de `tasks.md` en estado `pendiente` cuyas dependencias estén en `hecha`.
 2. **Plan de la tarea:** el agente lee la tarea, los requisitos que cubre y el legacy que cita, y presenta un plan corto: archivos a crear o modificar (todos dentro de los permitidos), qué hace cada uno, cómo se verifica y qué dudas hay. **Sin código.**
 3. **OK del usuario:** el usuario responde `OK T-x.y`, o pide cambios al plan o a los documentos.
 4. **Implementar:** sólo lo del plan aprobado, sólo en los archivos permitidos. El estado de la tarea pasa a `en curso`.
-5. **Verificar y cerrar:** el agente corre la verificación del skill (criterios de aceptación, tests, lint, build, desvíos contra la spec) y reporta. Si todo está bien, la tarea pasa a `hecha`. Si algo falla, lo reporta y **no** pasa a la siguiente tarea.
+5. **Verificar y cerrar:** el agente corre la verificación de `CLAUDE.md` (criterios de aceptación, tests, lint, build, archivos tocados según git, desvíos contra la spec) y reporta. Si todo está bien, la tarea pasa a `hecha` y **el usuario hace un commit de la tarea**. Si algo falla, el agente lo reporta y **no** pasa a la siguiente tarea.
 
 ## Cómo correrlo con Sonnet en Claude Code
 
 ### Preparación (una vez)
 
-1. Abrir Claude Code en la raíz del proyecto (`react-scroll/`).
+1. Abrir Claude Code en la raíz del proyecto (`react-scroll/`). Así se carga el `CLAUDE.md`.
 2. Elegir el modelo: `/model sonnet`.
-3. Verificar que el skill esté disponible: al escribir `/sdd-guard` debería aparecer en la lista.
+3. Verificar que el working tree de git esté limpio (`git status`). La verificación de "sólo tocó los archivos permitidos" se apoya en git.
 
 ### Ciclo de trabajo
 
-**Arrancar una sesión o retomar el trabajo:**
+Los pedidos van en lenguaje natural. Éstos son los que el `CLAUDE.md` reconoce:
 
-```
-/sdd-guard estado
-```
+| Para… | Escribir |
+|---|---|
+| Arrancar o retomar: ver en qué tarea está la migración y cuál sigue | `estado` |
+| Pedir el plan de una tarea (sin código) | `planificar T-1.2` |
+| Aprobar la implementación del plan presentado | `OK T-1.2` |
+| Verificar una tarea (se hace sola al terminar, pero se puede pedir) | `verificar T-1.2` |
+| Auditar todo el código contra la spec (por ejemplo, al cerrar una fase) | `auditar` |
+| Proponer un cambio cuando algo no está cubierto por los documentos | `proponer cambio: <descripción>` |
+| Aprobar un cambio de documento propuesto | `OK cambio` |
 
-El agente lee los documentos, muestra en qué tarea está la migración y cuál es la próxima.
-
-**Pedir el plan de la próxima tarea (sin código):**
-
-```
-/sdd-guard planificar T-1.2
-```
-
-**Aprobar la implementación:**
-
-```
-OK T-1.2
-```
-
-**Verificar al terminar (o en cualquier momento):**
-
-```
-/sdd-guard verificar T-1.2
-```
-
-**Auditar todo el código contra la spec** (por ejemplo, antes de cerrar una fase):
-
-```
-/sdd-guard auditar
-```
-
-**Proponer un cambio a la spec** cuando algo no está cubierto:
-
-```
-/sdd-guard proponer-cambio "<descripción>"
-```
-
-El agente edita `spec.md`, `design.md` o `tasks.md` y muestra el cambio. El cambio queda vigente sólo cuando el usuario lo aprueba.
+Después de cada tarea `hecha`, hacé un commit (`git add -A && git commit -m "T-1.2: <título>"`). Así la próxima tarea arranca con el working tree limpio y la verificación de archivos es exacta.
 
 ### Consejos para Sonnet
 
-- **Una tarea por sesión o por tramo de conversación.** Si la conversación se hace larga, conviene `/clear` y retomar con `/sdd-guard estado`: los documentos guardan todo el contexto necesario.
+- **Una tarea por sesión o por tramo de conversación.** Si la conversación se hace larga, conviene `/clear` y retomar con `estado`: los documentos guardan todo el contexto necesario.
 - **No pedir "seguí con todo".** El proceso está pensado para aprobar tarea por tarea.
-- **Si el agente propone algo que no está en la spec,** la respuesta correcta es pedirle que lo escriba como propuesta de cambio (`proponer-cambio`), no aprobarlo como código.
+- **Si el agente propone algo que no está en la spec,** la respuesta correcta es pedirle que lo escriba como propuesta de cambio, no aprobarlo como código.
 - **Tareas visuales:** algunas (la botella, las transiciones, los pósters) necesitan que el usuario mire el resultado en el navegador. El agente tiene que pedirlo explícitamente y no marcarlas `hecha` sin la confirmación visual del usuario.
 
 ## Estados de una tarea
