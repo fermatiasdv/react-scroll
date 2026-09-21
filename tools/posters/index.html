@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Fragrance Scroll — pósters</title>
+    <style>
+      * { box-sizing: border-box; }
+      body { margin: 0; padding: 1.5rem; background: #1a0f08; color: #fff; font-family: system-ui, sans-serif; }
+      h1 { margin: 0 0 0.5rem; font-size: 1.3rem; }
+      p { margin: 0.25rem 0; max-width: 60rem; line-height: 1.4; }
+      #status { min-height: 1.4em; color: #f0c674; }
+      .layout { display: flex; flex-wrap: wrap; gap: 2rem; margin-top: 1rem; align-items: flex-start; }
+      button, label { font: inherit; }
+      button { padding: 0.4rem 0.8rem; cursor: pointer; }
+      button:disabled { cursor: default; opacity: 0.5; }
+
+      /* El cuadro de 1024 px se muestra a 512 px. Canvas y póster ocupan el mismo cuadrado. */
+      #stage {
+        position: relative;
+        width: 512px;
+        height: 512px;
+        flex: none;
+        isolation: isolate;
+        background:
+          repeating-conic-gradient(#555 0% 25%, #777 0% 50%) 0 0 / 24px 24px;
+      }
+      #stage[data-view='difference'] { background: #000; }
+      /* pointer-events: none evita que el mouse active el hover tilt (AJUSTE-02) y salga inclinado. */
+      #canvas, #poster-layer, #poster {
+        position: absolute;
+        inset: 0;
+        width: 512px;
+        height: 512px;
+        pointer-events: none;
+      }
+      #stage[data-view='poster'] #canvas { visibility: hidden; }
+      #stage[data-view='canvas'] #poster-layer { visibility: hidden; }
+      /* En "Diferencia" el póster se compone sobre negro en su propia capa opaca antes de restarlo:
+         así los bordes semitransparentes se comparan igual que el canvas sobre negro, sin un
+         contorno falso por mezclar color con y sin premultiplicar. */
+      #stage[data-view='difference'] #poster-layer { background: #000; mix-blend-mode: difference; }
+      #poster[hidden] { display: none; }
+
+      #list { margin: 0; padding: 0; list-style: none; display: grid; gap: 0.4rem; }
+      #list li { display: flex; gap: 0.5rem; align-items: center; }
+      #list li span { min-width: 12rem; }
+      #list li.current span { font-weight: 700; color: #f0c674; }
+      fieldset { margin: 0.75rem 0; border: 1px solid #666; }
+    </style>
+  </head>
+  <body>
+    <h1>Pósters de la botella</h1>
+    <p>
+      Renderiza cada fragancia de frente (yaw 0), con fondo transparente, con el mismo <code>BottleRig</code>
+      del desplegado, y descarga <code>&lt;slug-sin-guiones&gt;.webp</code>.
+    </p>
+    <p>
+      Hay que regenerar los pósters cada vez que cambie el modelo, un material, la luz, una etiqueta o la cámara
+      (AJUSTE-11).
+    </p>
+    <p id="status" role="status"></p>
+
+    <div class="layout">
+      <div>
+        <div id="stage" data-view="canvas">
+          <canvas id="canvas"></canvas>
+          <div id="poster-layer"><img id="poster" alt="" hidden /></div>
+        </div>
+        <fieldset>
+          <legend>Comparar (póster guardado vs. canvas en vivo)</legend>
+          <label><input type="radio" name="view" value="canvas" checked /> Canvas</label>
+          <label><input type="radio" name="view" value="poster" /> Póster</label>
+          <label><input type="radio" name="view" value="difference" /> Diferencia</label>
+        </fieldset>
+      </div>
+
+      <div>
+        <p><button id="download-all" type="button" disabled>Descargar los 10</button></p>
+        <ul id="list"></ul>
+      </div>
+    </div>
+
+    <script type="module" src="./render-posters.js"></script>
+  </body>
+</html>

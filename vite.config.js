@@ -5,6 +5,6 @@ import { defineConfig } from 'vite'
 export default defineConfig({
   plugins: [react()],
   optimizeDeps: {
-    entries: ['index.html'],
+    entries: ['index.html', 'tools/posters/index.html'],
   },
 })

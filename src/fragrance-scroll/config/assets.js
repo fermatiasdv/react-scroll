@@ -35,6 +35,18 @@ export const DEFAULT_ASSETS = {
     epicurean: '/fragrance-scroll/ingredients/epicurean.webp',
     london_legend: '/fragrance-scroll/ingredients/londonlegend.webp',
   },
-  // Se completa en T-3.3, cuando se generen los pósters.
-  posters: {},
+  // Generados con tools/posters (AJUSTE-11): hay que regenerarlos si cambia el modelo, un material,
+  // la luz, una etiqueta o la cámara.
+  posters: {
+    rebellious: '/fragrance-scroll/posters/rebellious.webp',
+    forbidden_flower: '/fragrance-scroll/posters/forbiddenflower.webp',
+    wonder_of_the_world: '/fragrance-scroll/posters/wonderoftheworld.webp',
+    painkiller: '/fragrance-scroll/posters/painkiller.webp',
+    jagged_edge: '/fragrance-scroll/posters/jaggededge.webp',
+    crimson_desert: '/fragrance-scroll/posters/crimsondesert.webp',
+    glitterati: '/fragrance-scroll/posters/glitterati.webp',
+    ecstasy: '/fragrance-scroll/posters/ecstasy.webp',
+    epicurean: '/fragrance-scroll/posters/epicurean.webp',
+    london_legend: '/fragrance-scroll/posters/londonlegend.webp',
+  },
 }

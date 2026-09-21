@@ -21,8 +21,8 @@
 | T-2.3 | Test de SSR | T-2.2 | hecha |
 | T-3.1 | `loadThree` + `BottleRig` | T-2.2 | hecha |
 | T-3.2 | `<Bottle>` persistente con póster provisorio | T-3.1 | hecha |
-| T-3.3 | Herramienta de pósters + generación | T-3.2 | plan propuesto |
-| T-3.4 | Verificación visual de etiquetas WebP | T-3.2 | plan propuesto |
+| T-3.3 | Herramienta de pósters + generación | T-3.2 | hecha |
+| T-3.4 | Verificación visual de etiquetas WebP | T-3.2 | hecha |
 | T-4.1 | `useNavigation`: swipe, rueda, teclado y timers | T-1.4, T-2.2 | pendiente |
 | T-4.2 | Coreografía de la transición | T-3.2, T-4.1 | pendiente |
 | T-4.3 | Giro de carga inicial | T-4.2 | pendiente |
@@ -211,7 +211,7 @@
 
 ### T-3.3: Herramienta de pósters + generación
 
-- **Estado:** plan propuesto
+- **Estado:** hecha
 - **Cubre:** RF-10.1, RF-10.2, RF-10.4, AJUSTE-11
 - **Archivos permitidos:** `tools/posters/index.html`, `tools/posters/render-posters.js`, `vite.config.js` (sólo para agregar `tools/posters/index.html` como entrada de desarrollo), `public/fragrance-scroll/posters/*.webp`, `src/fragrance-scroll/config/assets.js` (sólo `posters`).
 - **Pasos:**
@@ -225,7 +225,7 @@
 
 ### T-3.4: Verificación visual de etiquetas WebP
 
-- **Estado:** plan propuesto
+- **Estado:** hecha
 - **Cubre:** AJUSTE-10
 - **Archivos permitidos:** `docs/ajustes.md`; eventualmente `public/fragrance-scroll/labels/*.webp`, si hay que regenerarlas a calidad 95.
 - **Aceptación:** **el usuario confirma** que las etiquetas se ven bien sobre la botella; AJUSTE-10 queda actualizado.

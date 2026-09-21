@@ -107,7 +107,7 @@ No son features de prueba, pero son decisiones tomadas para avanzar que conviene
 
 - **Qué es:** las 10 etiquetas (PNG RGBA de 1024×1024, ~800 KB cada una) se convirtieron a WebP con pérdida, calidad 90, `method=6` y `exact` (conserva el color de los píxeles transparentes, para que el filtrado de la textura no genere bordes oscuros). Pasaron de 7,75 MB a 0,77 MB en total (~80 KB cada una).
 - **Verificado:** el canal alfa queda sin pérdida y el recorte por `alphaTest 0.4` coincide píxel por píxel con el PNG. En los píxeles visibles, la diferencia de color es de ~39 dB de PSNR (no se nota a simple vista).
-- **Falta verificar:** cómo se ve sobre la botella 3D real (fase 3). Si aparecen artefactos en el texto de la etiqueta, subir a calidad 95 (~110 KB cada una). Los PNG originales siguen en `legacy/my-initial-store/assets/scroll-bottle-label*.png`.
+- **Verificado sobre la botella 3D real (2026-09-21, por el usuario):** las 10 etiquetas se ven bien, sin artefactos; se mantiene la calidad 90. Si más adelante aparecen artefactos en el texto, subir a calidad 95 (~110 KB cada una). Los PNG originales siguen en `legacy/my-initial-store/assets/scroll-bottle-label*.png`.
 - **Cómo se regeneran:** con Pillow, `Image.open(png).convert("RGBA").save(webp, "WEBP", quality=90, method=6, exact=True)`.
 
 ### AJUSTE-11 — Póster de la botella en la home (colapsado sin WebGL)
