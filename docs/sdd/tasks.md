@@ -8,8 +8,9 @@
 
 | Tarea | Título | Depende de | Estado |
 |---|---|---|---|
-| T-0.1 | Limpiar el template y crear la estructura | — | pendiente |
-| T-0.2 | Vitest y alias al legacy | T-0.1 | pendiente |
+| T-0.1 | Limpiar el template y crear la estructura | — | hecha |
+| T-0.1-fix | Excluir `legacy/` del lint | — | hecha |
+| T-0.2 | Vitest y alias al legacy | T-0.1, T-0.1-fix | pendiente |
 | T-1.1 | Datos de fragancias, assets y constantes | T-0.2 | pendiente |
 | T-1.2 | `layout.js` literal + tests contra el legacy | T-0.2 | pendiente |
 | T-1.3 | `slug.js` y `scene.js` + tests | T-1.1, T-1.2 | pendiente |
@@ -37,7 +38,7 @@
 
 ### T-0.1: Limpiar el template y crear la estructura
 
-- **Estado:** pendiente
+- **Estado:** hecha
 - **Cubre:** RNF-01, RNF-07
 - **Archivos permitidos:**
   - borrar `src/App.jsx`, `src/App.css`, `src/assets/*`, `public/icons.svg` y `public/favicon.svg`;
@@ -49,6 +50,18 @@
   3. `src/index.css`: reset mínimo (`margin: 0`, `box-sizing`, fondo `#1a0f08`).
   4. `SandboxApp.jsx`: un placeholder que diga "sandbox".
 - **Aceptación:** `npm run dev` muestra el placeholder sin errores en la consola; build y lint en verde; no quedan referencias al template.
+- **Nota:** el lint recorría `legacy/` y fallaba por archivos ajenos al proyecto. El criterio "lint en verde" se cumple con T-0.1-fix; T-0.1 pasa a `hecha` cuando T-0.1-fix esté verificada.
+
+### T-0.1-fix: Excluir `legacy/` del lint
+
+- **Estado:** hecha
+- **Cubre:** verificación estándar (VE): `npm run lint` en verde; `legacy/` es de sólo lectura.
+- **Archivos permitidos:** `.oxlintrc.json`.
+- **Pasos:** agregar la clave `"ignorePatterns": ["legacy/**"]` a `.oxlintrc.json`. No se toca `package.json` ni `legacy/`.
+- **Aceptación:**
+  - `npm run lint` termina con código 0;
+  - `git status --porcelain` muestra sólo `.oxlintrc.json` (y los cambios ya pendientes de T-0.1);
+  - sin cambios en `legacy/`.
 
 ### T-0.2: Vitest y alias al legacy
 
