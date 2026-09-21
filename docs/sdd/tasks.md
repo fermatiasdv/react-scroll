@@ -23,7 +23,7 @@
 | T-3.2 | `<Bottle>` persistente con póster provisorio | T-3.1 | hecha |
 | T-3.3 | Herramienta de pósters + generación | T-3.2 | hecha |
 | T-3.4 | Verificación visual de etiquetas WebP | T-3.2 | hecha |
-| T-4.1 | `useNavigation`: swipe, rueda, teclado y timers | T-1.4, T-2.2 | pendiente |
+| T-4.1 | `useNavigation`: swipe, rueda, teclado y timers | T-1.4, T-2.2 | hecha |
 | T-4.2 | Coreografía de la transición | T-3.2, T-4.1 | pendiente |
 | T-4.3 | Giro de carga inicial | T-4.2 | pendiente |
 | T-4.4 | Prueba en Android de gama media | T-4.3 | pendiente |
@@ -234,7 +234,7 @@
 
 ### T-4.1: `useNavigation`: swipe, rueda, teclado y timers
 
-- **Estado:** pendiente
+- **Estado:** hecha
 - **Cubre:** RF-06.2 a RF-06.5, RF-07.3, RF-07.4, design §4.9
 - **Archivos permitidos:** `src/fragrance-scroll/hooks/useNavigation.js`, `src/fragrance-scroll/components/ExpandedView.jsx`, `tests/unit/useNavigation.test.js` (sólo si la lógica testeable se extrae a funciones puras dentro del hook).
 - **Pasos:** conectar el reducer con los listeners y los timers. Por ahora, el cambio de fragancia es un corte seco (sin coreografía).

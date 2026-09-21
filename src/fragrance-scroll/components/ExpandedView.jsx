@@ -1,4 +1,5 @@
 import { BACKGROUND_TRANSITION_MS, LABEL_TRANSITION_MS, WORD_FADE_MS } from '../config/timing.js'
+import { useNavigation } from '../hooks/useNavigation.js'
 import { useViewport } from '../hooks/useViewport.js'
 import { layoutFor } from '../lib/layout.js'
 import { sceneFor } from '../lib/scene.js'
@@ -9,10 +10,16 @@ import CloseButton from './CloseButton.jsx'
 import IngredientImage from './IngredientImage.jsx'
 import Panel from './Panel.jsx'
 
-// Pantalla del modo desplegado (RF-03, RF-04), por ahora sin navegación: una sola fragancia.
+// Pantalla del modo desplegado (RF-03, RF-04, RF-06). Por ahora la fragancia cambia de golpe, a los
+// COLLAPSE_TO_CENTER_MS del gesto y sin coreografía (T-4.2).
 export default function ExpandedView({ assets, fragrances, initialSlug, onCloseExpanded }) {
   const viewport = useViewport()
-  const index = indexFromSlug(fragrances, initialSlug)
+  const navigation = useNavigation({
+    initialIndex: indexFromSlug(fragrances, initialSlug),
+    count: fragrances.length,
+    onClose: onCloseExpanded,
+  })
+  const index = navigation.index
   const fragrance = fragrances[index]
 
   const style = {
@@ -61,7 +68,7 @@ export default function ExpandedView({ assets, fragrances, initialSlug, onCloseE
       <div className="fs-content" aria-hidden="true">
         {items}
       </div>
-      <CloseButton onClick={onCloseExpanded} />
+      <CloseButton onClick={navigation.close} />
     </div>
   )
 }
