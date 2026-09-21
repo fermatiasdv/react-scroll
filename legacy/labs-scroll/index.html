@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script>
+        // Arranca SIEMPRE en modo desactivado (ver animationsEnabled en motor.js, pedido del
+        // usuario 2026-09-14/15) antes de que pinte nada, para que no se vea un flash de las capas
+        // fijas del POC ni de la caja colapsada del grupo de fragancias tapando la primera sección
+        // fake mientras carga el módulo. Un deep link (?fragrance=slug, ver FRAGRANCE_QUERY_PARAM
+        // en config.js) YA NO fuerza el modo activado — también arranca acá, colapsado; motor.js se
+        // encarga de scrollear directo a la fragancia pedida una vez que carga.
+        document.documentElement.classList.add('fake-scroll-mode', 'poc-layers-hidden');
+    </script>
+    <script type="module" src="./scripts/motor.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300..700;1,300..700&display=swap');
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* Corta el scroll nativo y el rebote elástico: el paginado táctil lo maneja motor.js. */
+        html,
+        body {
+            touch-action: none;
+            overscroll-behavior: none;
+        }
+
+        .gpt-container{
+            width: 100vw;
+            height: var(--page-height);
+            background-color: #f0f0f0;
+        }
+
+        .box-blue    { background-color: #1e6fd9; }
+        .box-red     { background-color: #d92b2b; }
+        .box-green   { background-color: #2ba84a; }
+        .box-orange  { background-color: #e8791a; }
+        .box-violet  { background-color: #7a2bd9; }
+
+        /* Capa fija con las dos imágenes de fondo (una por caja) que se cruzan en cada cambio de
+           caja: la que se va se desvanece mientras la que entra hace fade in en su lugar (puro
+           crossfade, sin desplazamiento — el parallax que tenía esto al principio se sacó
+           2026-09-10 porque se sentía como un salto entre páginas), así el corte entre fondos no
+           es instantáneo como el salto real de scroll que sigue pasando por debajo (ver
+           transitionBackground/setBackgroundInstant en styles.js, y goToIndex en motor.js). Va
+           por debajo de .background-overlay (que sigue oscureciendo lo que haya acá) y de
+           .display-layer. */
+        .background-transition-layer {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: 2;
+        }
+
+        /* Secciones fake alrededor del POC (pedido del usuario 2026-09-11), sólo para ver cómo
+           convive con contenido normal de una página arriba y abajo. No son parte del producto.
+           En modo desactivado (default, ver animationsEnabled en motor.js) el grupo entero de
+           fragancias queda COLAPSADO a una única pantalla (pedido del usuario 2026-09-14/15, ver
+           buildBoxes/renderCollapsedEntry) — el scroll está siempre libre, así que se llega a estas
+           secciones fake caminando como a cualquier sección más, sin ningún salto al entrar/salir
+           del grupo. En modo activado (paginación clásica, el grupo se despliega a una pantalla por
+           fragancia) motor.js libera el scroll nativo puntualmente en los bordes de la paginación
+           para poder llegar a ellas (ver isFakeScrollMode/atScrollEdge/enterFakeScrollMode en
+           motor.js) — ahí sí, mientras la caja de borde está genuinamente a la vista (ver
+           html.poc-layers-hidden más abajo), se ocultan las capas fijas del POC de abajo (si no,
+           quedarían tapando este contenido por estar en position: fixed). */
+        .fake-section {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            padding: 8vw;
+            text-align: center;
+            font-family: 'Cormorant Garamond', serif;
+            color: #fff;
+        }
+
+        .fake-section-eyebrow {
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            font-size: 0.85rem;
+            opacity: 0.6;
+        }
+
+        .fake-section h1 {
+            font-size: clamp(1.8rem, 5vw, 3.2rem);
+            font-weight: 600;
+            max-width: 32ch;
+        }
+
+        .fake-section-before-1 { background-color: #22303f; }
+        .fake-section-before-2 { background-color: #2f3f4f; }
+        .fake-section-after    { background-color: #241f30; }
+
+        /* Restaura la física de scroll normal del documento (nada de bloqueo/paginado). Esta
+           clase la prende motor.js en dos situaciones bien distintas (ver animationsEnabled y
+           setAnimationsEnabled ahí): en modo desactivado (default) queda puesta SIEMPRE — todo el
+           documento, grupo de fragancias colapsado incluido, se recorre como una página normal
+           cualquiera; en modo activado (paginación clásica, grupo desplegado a una pantalla por
+           fragancia) se prende sólo momentáneamente, mientras el scroll nativo está liberado en un
+           borde real de la paginación (ver isFakeScrollMode/enterFakeScrollMode/exitFakeScrollMode
+           en motor.js), y se saca de nuevo al volver a entrar a la paginación. */
+        html.fake-scroll-mode,
+        html.fake-scroll-mode body {
+            touch-action: pan-y;
+            overscroll-behavior: auto;
+        }
+
+        /* Oculta las capas FIJAS del POC (pensadas para el modo activado, paginado — ver
+           .collapsed-box-overlay/.collapsed-box-content más abajo para su equivalente EN FLUJO del
+           modo desactivado, que nunca se oculta con esta clase) — INDEPENDIENTE de
+           html.fake-scroll-mode (pedido del usuario 2026-09-13, ronda 3): si las dos se
+           apagaran/prendieran juntas en el mismo instante en que se libera/recaptura el scroll
+           (como pasaba antes), se veía el fondo "pelado" de la caja de borde (sin overlay oscuro,
+           sin botella, sin panel) durante el tramo de scroll nativo que falta para cruzar del todo
+           hacia/desde la sección fake — la caja de borde ya estaba (o todavía estaba) ahí en el
+           documento, sólo que sin las capas fijas puestas encima. Esta clase la prende/apaga
+           `syncPocLayersVisibility` (motor.js) en modo activado, en cada scroll mientras
+           isFakeScrollMode es true, sólo cuando el scroll deja de solaparse del todo con el rango
+           de cajas desplegadas — así la caja de borde se sigue viendo compuesta durante todo el
+           cruce, y sólo desaparece cuando ya no hay nada de ella a la vista.
+           OJO (bug reportado por el usuario 2026-09-15, ronda 6): en modo DESACTIVADO,
+           `syncPocLayersVisibility` sigue corriendo en cada scroll para decidir si el botón "Show
+           fragancies"/cerrar debe verse (ver la regla al final de la hoja) — y por eso
+           `poc-layers-hidden` se saca apenas la única caja colapsada entra en vista, exactamente
+           igual que en activado. El bug era que esa misma condición TAMBIÉN destapaba estas tres
+           capas fijas (en particular `.background-overlay`, que al ser `position: fixed; inset: 0`
+           oscurece la pantalla ENTERA, no sólo la caja) aunque el modo desactivado no las usa para
+           nada — se veían las páginas fake oscurecerse apenas asomaba un pixel de la caja
+           colapsada (entrando o saliendo), y al cerrar (✕) el fondo/contenido que había quedado
+           de la última fragancia vista en modo activado (que `disposeDisplay` no llega a limpiar
+           del todo) quedaba tapando la pantalla hasta perder de vista esa caja. Fix: además de
+           `poc-layers-hidden`, exigir `html.fragrances-animated` — así estas tres capas fijas sólo
+           pueden mostrarse en modo activado, sin importar qué tan solapada esté la caja colapsada
+           en modo desactivado. El botón "Show fragancies"/cerrar NO se tocó: sigue dependiendo
+           sólo de `poc-layers-hidden`, sin el agregado de `fragrances-animated` (tiene que verse en
+           LOS DOS modos). */
+        html.poc-layers-hidden .background-transition-layer,
+        html.poc-layers-hidden .background-overlay,
+        html.poc-layers-hidden .display-layer,
+        html:not(.fragrances-animated) .background-transition-layer,
+        html:not(.fragrances-animated) .background-overlay,
+        html:not(.fragrances-animated) .display-layer {
+            display: none;
+        }
+
+        /* Las dos capas de fondo en sí; cuál de las dos entra/sale en cada momento lo decide JS.
+           opacity arranca en 0 y lo pisa JS inline en cada transición. */
+        .background-transition-bg {
+            position: absolute;
+            inset: 0;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            opacity: 0;
+            transition: opacity var(--background-transition-ms) ease;
+        }
+
+        /* Capa fija sobre el fondo para bajarle protagonismo y resaltar el texto del panel. */
+        .background-overlay {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 5;
+            background: rgba(0, 0, 0, 0.6);
+        }
+
+        /* Capa fija e independiente del scroll donde viven los items de contenido. */
+        .display-layer {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: 10;
+        }
+
+        /* Overlay oscuro y capa de items de la ÚNICA caja colapsada del grupo de fragancias en modo
+           DESACTIVADO (pedido del usuario 2026-09-14/15, ver renderCollapsedEntry en styles.js y
+           buildBoxes(collapsed=true) en motor.js) — a diferencia de .background-overlay/
+           .display-layer (position:fixed, para el modo activado paginado), estas dos van DENTRO de
+           la caja colapsada (position:relative, ver buildBoxes), en flujo normal del documento, así
+           el conjunto scrollea como cualquier otro contenido de la página, en vez de "aparecer" de
+           golpe. Mismos valores visuales que sus equivalentes fijos, pero con clase propia a
+           propósito: NUNCA deben ocultarse con html.poc-layers-hidden (esa regla es sólo para las
+           capas FIJAS del modo activado y para los botones — ver más abajo; si estas reusaran esa
+           clase, se ocultarían junto con las capas fijas en vez de comportarse como contenido
+           normal que simplemente sale de la pantalla al scrollear). */
+        .collapsed-box-overlay {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            z-index: 5;
+            background: rgba(0, 0, 0, 0.6);
+        }
+
+        .collapsed-box-content {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: 10;
+        }
+
+        /* Posición y transición comunes a cualquier item; top/left, opacity y transform los pisa JS inline por item. */
+        .display-item {
+            position: absolute;
+            transform: translate(-50%, -50%);
+            opacity: 0;
+            transition: opacity var(--label-transition-ms) ease, transform var(--label-transition-ms) ease;
+        }
+
+        .display-label {
+            color: #fff;
+            font-family: 'Cormorant Garamond', serif;
+            font-size: clamp(1.2rem, 4vw, 2.5rem);
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.55), 0 1px 2px rgba(0, 0, 0, 0.65);
+        }
+
+        /* Panel de título + lista de ingredientes: título arriba y fila de ingredientes abajo, centrados. */
+        .display-label-title {
+            font-size: var(--title-font-size);
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .display-label-ingredient {
+            font-size: var(--ingredient-font-size);
+            font-weight: 400;
+            white-space: nowrap;
+        }
+
+        /* Cada palabra del panel (ver createLabelElement en styles.js) arranca invisible y hace fade a opacity 1. */
+        .display-label-word {
+            display: inline-block;
+            opacity: 0;
+            transition: opacity var(--word-fade-ms) ease;
+        }
+
+        .display-image {
+            max-width: 40vw;
+            max-height: 40vh;
+            object-fit: contain;
+        }
+
+        /* Overlay "Show fragancies" (pedido del usuario 2026-09-13/14/15, ver animationsEnabled en
+           motor.js): por defecto (sin html.fragrances-animated — modo desactivado) el grupo de
+           fragancias está COLAPSADO a una única pantalla (ver renderCollapsedEntry en styles.js),
+           mostrada sin ninguna animación y en flujo normal del documento (el scroll queda 100%
+           libre por TODA la página, secciones fake incluidas, sin ningún salto al entrar/salir del
+           grupo). Este botón, fijo sobre esa pantalla, la activa: al presionarlo el grupo se
+           DESPLIEGA a una pantalla por fragancia y pasa a poder paginarse con saltos animados (ver
+           setAnimationsEnabled en motor.js). El contenedor en sí NO bloquea el mouse
+           (pointer-events: none) para no estorbar el scroll ni el hover de la botella; sólo el
+           botón de adentro es clickeable.
+           Pedido del usuario 2026-09-16: que el botón no se "escape" de la pantalla de la botella.
+           Antes esto era `position: fixed`, así que aparecía pegado al fondo del VIEWPORT apenas se
+           solapaba un solo pixel de la caja colapsada (ver overlapsGroupZone/syncPocLayersVisibility
+           en motor.js) — llegaba a verse flotando sobre una sección fake vecina durante ese cruce.
+           Ahora es `position: absolute` y motor.js (buildBoxes) reubica este MISMO nodo (nunca lo
+           recrea, para no perder el listener de click atado en init()) como hijo de la caja
+           colapsada (position:relative, overflow:hidden, alto exacto del viewport) — así el botón
+           queda contenido en esa caja, sin escapar, y sencillamente scrollea junto con ella como
+           cualquier otro contenido normal de la página; `html.poc-layers-hidden` (ver la regla al
+           final de la hoja) sigue ocultándolo también, como red de seguridad adicional. */
+        .fragrances-overlay {
+            position: absolute;
+            inset: 0;
+            z-index: 20;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            padding-bottom: 8vh;
+            pointer-events: none;
+        }
+
+        .fragrances-show-button {
+            pointer-events: auto;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.6rem;
+            padding: 0.9rem 1.6rem;
+            border: none;
+            border-radius: 999px;
+            background: rgba(0, 0, 0, 0.75);
+            color: #fff;
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.1rem;
+            letter-spacing: 0.03em;
+            cursor: pointer;
+        }
+
+        .fragrances-show-arrow {
+            font-size: 1.2rem;
+            line-height: 1;
+            transform: translateY(-1px);
+        }
+
+        /* Botón de cerrar (✕, arriba a la derecha): apaga las animaciones y hace reaparecer el
+           overlay de arriba. Sólo visible con html.fragrances-animated (ver más abajo). */
+        .fragrances-close-button {
+            position: fixed;
+            top: 1.5rem;
+            right: 1.5rem;
+            z-index: 20;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            width: 2.5rem;
+            height: 2.5rem;
+            border: none;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, 0.75);
+            color: #fff;
+            font-size: 1.1rem;
+            line-height: 1;
+            cursor: pointer;
+        }
+
+        /* Con las animaciones activadas se invierte: desaparece el botón de mostrar y aparece el de
+           cerrar. */
+        html.fragrances-animated .fragrances-overlay {
+            display: none;
+        }
+
+        html.fragrances-animated .fragrances-close-button {
+            display: flex;
+        }
+
+        /* El producto no lleva ningún tope: su tamaño lo decide layout.js. Sí recibe eventos de
+           mouse (a diferencia del resto de .display-layer, que tiene pointer-events: none) para
+           poder detectar el hover e inclinarla según la posición del mouse (ver bottle.js). Desde
+           2026-09-11 es además un <a> (ver createProductLinkedCanvas en styles.js) — el
+           ancla de prueba que lleva a Google, de ahí el cursor: pointer explícito. */
+        .display-image.display-image-product {
+            max-width: none;
+            max-height: none;
+            pointer-events: auto;
+            cursor: pointer;
+        }
+
+        /* El modo fake (ver html.poc-layers-hidden más arriba) siempre gana: si se llega a una
+           sección fake con las animaciones activadas, el botón de cerrar no debe quedar flotando
+           ahí encima — se tapa igual que el resto de las capas del POC, sin importar
+           html.fragrances-animated. Misma especificidad que esa regla; por eso ésta va al final de
+           la hoja, para ganarle en la cascada. */
+        html.poc-layers-hidden .fragrances-overlay,
+        html.poc-layers-hidden .fragrances-close-button {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <section class="fake-section fake-section-before-1">
+        <p class="fake-section-eyebrow">Sección de prueba — página externa</p>
+        <h1>Sección fake antes del scroll — 1 de 2</h1>
+    </section>
+    <section class="fake-section fake-section-before-2">
+        <p class="fake-section-eyebrow">Sección de prueba — página externa</p>
+        <h1>Sección fake antes del scroll — 2 de 2</h1>
+    </section>
+    <div
+        class="gpt-container"
+    ></div>
+    <section class="fake-section fake-section-after">
+        <p class="fake-section-eyebrow">Sección de prueba — página externa</p>
+        <h1>Sección fake después del scroll</h1>
+    </section>
+    <div class="background-overlay" aria-hidden="true"></div>
+    <div class="fragrances-overlay">
+        <button type="button" class="fragrances-show-button" id="fragrancesShowButton">
+            Show fragancies
+            <span class="fragrances-show-arrow" aria-hidden="true">&rarr;</span>
+        </button>
+    </div>
+    <button type="button" class="fragrances-close-button" id="fragrancesCloseButton" aria-label="Cerrar">
+        <span aria-hidden="true">&#10005;</span>
+    </button>
+</body>
+</html>

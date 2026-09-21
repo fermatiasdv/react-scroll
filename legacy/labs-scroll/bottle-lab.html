@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Botella 3D — banco de pruebas</title>
+    <style>
+        /*
+          Página suelta para mirar la botella grande mientras se le afina la forma. No es parte del
+          sitio: el sitio usa el mismo módulo (scripts/bottle.js) desde scripts/styles.js, con la
+          botella chica y una rotación al entrar a cada caja.
+        */
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            background: radial-gradient(circle at 35% 30%, #4a2409 0%, #2a1305 45%, #120802 100%);
+            color: #e9d5bb;
+            font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+        }
+
+        /* El canvas es cuadrado, igual que en el sitio: la cámara ortográfica lo asume. */
+        #bottle {
+            width: min(70vh, 90vw);
+            height: min(70vh, 90vw);
+            cursor: grab;
+            touch-action: none;
+        }
+
+        #bottle:active { cursor: grabbing; }
+
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+            justify-content: center;
+        }
+
+        button, select {
+            font: inherit;
+            font-size: 14px;
+            padding: 8px 14px;
+            border-radius: 999px;
+            border: 1px solid #a9793d;
+            background: rgba(0, 0, 0, 0.35);
+            color: #e9d5bb;
+            cursor: pointer;
+        }
+
+        .hint {
+            font-size: 13px;
+            opacity: 0.6;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="bottle"></canvas>
+    <div class="controls">
+        <select id="fragrance">
+            <option>London Legend</option>
+            <option>Crimson Desert</option>
+            <option>Rebellious</option>
+            <option>Forbidden Flower</option>
+            <option>Wonder Of The World</option>
+            <option>Painkiller</option>
+            <option>Jagged Edge</option>
+            <option>Glitterati</option>
+            <option>Ecstasy</option>
+            <option>Epicurean</option>
+        </select>
+        <button id="spin" type="button">Girar 2 s</button>
+        <button id="reset" type="button">De frente</button>
+    </div>
+    <p class="hint">Arrastrá sobre la botella para verla desde cualquier ángulo.</p>
+
+    <script type="module">
+        import { createBottle } from './scripts/bottle.js';
+        import { PRODUCT_CONTENT_X, PRODUCT_CONTENT_Y } from './scripts/layout.js';
+
+        const canvas = document.getElementById('bottle');
+        const fragranceSelect = document.getElementById('fragrance');
+
+        let bottle = null;
+        let yaw = 0;
+
+        /** (Re)crea la botella al tamaño actual del canvas, con la fragancia elegida. */
+        function build() {
+            if (bottle) bottle.dispose();
+            const size = Math.round(canvas.getBoundingClientRect().width);
+            canvas.width = size;
+            canvas.height = size;
+            bottle = createBottle(canvas, {
+                size,
+                height: PRODUCT_CONTENT_Y * 2,
+                maxRadius: PRODUCT_CONTENT_X,
+                fragranceName: fragranceSelect.value,
+            });
+            bottle.setYaw(yaw);
+            bottle.spin();
+        }
+
+        build();
+
+        fragranceSelect.addEventListener('change', () => {
+            yaw = 0;
+            build();
+        });
+
+        document.getElementById('spin').addEventListener('click', () => {
+            yaw = 0;
+            bottle.spin();
+        });
+
+        document.getElementById('reset').addEventListener('click', () => {
+            yaw = 0;
+            bottle.setYaw(0);
+        });
+
+        // Arrastre: sólo para probar acá, el sitio no lleva interacción (rota al cambiar de caja).
+        let dragging = false;
+        let lastX = 0;
+
+        canvas.addEventListener('pointerdown', (e) => {
+            dragging = true;
+            lastX = e.clientX;
+            canvas.setPointerCapture(e.pointerId);
+        });
+
+        canvas.addEventListener('pointermove', (e) => {
+            if (!dragging) return;
+            yaw += (e.clientX - lastX) * 0.01;
+            lastX = e.clientX;
+            bottle.setYaw(yaw);
+        });
+
+        const endDrag = () => { dragging = false; };
+        canvas.addEventListener('pointerup', endDrag);
+        canvas.addEventListener('pointercancel', endDrag);
+
+        let resizeTimer = null;
+        window.addEventListener('resize', () => {
+            window.clearTimeout(resizeTimer);
+            resizeTimer = window.setTimeout(build, 200);
+        });
+    </script>
+</body>
+</html>
