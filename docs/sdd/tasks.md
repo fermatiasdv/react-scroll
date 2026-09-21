@@ -10,7 +10,7 @@
 |---|---|---|---|
 | T-0.1 | Limpiar el template y crear la estructura | — | hecha |
 | T-0.1-fix | Excluir `legacy/` del lint | — | hecha |
-| T-0.2 | Vitest y alias al legacy | T-0.1, T-0.1-fix | pendiente |
+| T-0.2 | Vitest y alias al legacy | T-0.1, T-0.1-fix | hecha |
 | T-1.1 | Datos de fragancias, assets y constantes | T-0.2 | pendiente |
 | T-1.2 | `layout.js` literal + tests contra el legacy | T-0.2 | pendiente |
 | T-1.3 | `slug.js` y `scene.js` + tests | T-1.1, T-1.2 | pendiente |
@@ -65,13 +65,13 @@
 
 ### T-0.2: Vitest y alias al legacy
 
-- **Estado:** pendiente
+- **Estado:** hecha
 - **Cubre:** RNF-04, design §4.13
 - **Archivos permitidos:** `package.json`, `package-lock.json`, `vitest.config.js` (nuevo), `tests/unit/smoke.test.js` (nuevo).
 - **Pasos:**
   1. `npm i -D vitest@^5`.
   2. Script `"test": "vitest run"`.
-  3. `vitest.config.js`: entorno `node`, `include: ['tests/**/*.test.js']`, y alias `@scroll/layout` → `legacy/my-initial-store/assets/scroll-layout.js`.
+  3. `vitest.config.js`: entorno `node`, `include: ['tests/**/*.test.{js,jsx}']`, y alias `@scroll/layout` → `legacy/my-initial-store/assets/scroll-layout.js`.
   4. Un smoke test que importe `layoutFor` desde el legacy y verifique que es una función.
 - **Aceptación:** `npm run test` pasa; VE.
 
