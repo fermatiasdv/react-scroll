@@ -11,14 +11,15 @@
 | T-0.1 | Limpiar el template y crear la estructura | — | hecha |
 | T-0.1-fix | Excluir `legacy/` del lint | — | hecha |
 | T-0.2 | Vitest y alias al legacy | T-0.1, T-0.1-fix | hecha |
+| T-0.2-fix | Limitar el escaneo de dependencias de Vite (excluir `legacy/`) | T-0.2 | hecha |
 | T-1.1 | Datos de fragancias, assets y constantes | T-0.2 | hecha |
 | T-1.2 | `layout.js` literal + tests contra el legacy | T-0.2 | hecha |
 | T-1.3 | `slug.js` y `scene.js` + tests | T-1.1, T-1.2 | hecha |
 | T-1.4 | Reducer de navegación + tests | T-1.1 | hecha |
-| T-2.1 | `useViewport` + estilos base | T-1.3 | pendiente |
-| T-2.2 | Render estático del desplegado (sin botella 3D) | T-2.1 | pendiente |
-| T-2.3 | Test de SSR | T-2.2 | pendiente |
-| T-3.1 | `loadThree` + `BottleRig` | T-2.2 | pendiente |
+| T-2.1 | `useViewport` + estilos base | T-1.3 | hecha |
+| T-2.2 | Render estático del desplegado (sin botella 3D) | T-2.1 | hecha |
+| T-2.3 | Test de SSR | T-2.2 | hecha |
+| T-3.1 | `loadThree` + `BottleRig` | T-2.2 | plan propuesto |
 | T-3.2 | `<Bottle>` persistente con póster provisorio | T-3.1 | pendiente |
 | T-3.3 | Herramienta de pósters + generación | T-3.2 | pendiente |
 | T-3.4 | Verificación visual de etiquetas WebP | T-3.2 | pendiente |
@@ -74,6 +75,18 @@
   3. `vitest.config.js`: entorno `node`, `include: ['tests/**/*.test.{js,jsx}']`, y alias `@scroll/layout` → `legacy/my-initial-store/assets/scroll-layout.js`.
   4. Un smoke test que importe `layoutFor` desde el legacy y verifique que es una función.
 - **Aceptación:** `npm run test` pasa; VE.
+
+### T-0.2-fix: Limitar el escaneo de dependencias de Vite
+
+- **Estado:** hecha
+- **Cubre:** RNF (higiene del entorno de desarrollo; no altera el comportamiento de la spec)
+- **Archivos permitidos:** `vite.config.js`.
+- **Pasos:**
+  1. Agregar `optimizeDeps: { entries: ['index.html'] }` para que Vite no escanee los `.html` de `legacy/`, que resuelven `three` por `importmap` a CDN.
+- **Aceptación:**
+  - `npm run dev` arranca sin el warning "Failed to run dependency scan";
+  - VE.
+- **Nota:** T-3.3 agrega `tools/posters/index.html` como entrada de desarrollo en `vite.config.js`. Ahí también habrá que sumarlo a `optimizeDeps.entries`.
 
 ## Fase 1: datos y lógica pura
 
@@ -139,7 +152,7 @@
 
 ### T-2.1: `useViewport` + estilos base
 
-- **Estado:** pendiente
+- **Estado:** hecha
 - **Cubre:** RF-03.5, RF-04.2, RNF-02, RNF-07
 - **Archivos permitidos:** `src/fragrance-scroll/hooks/useViewport.js`, `src/fragrance-scroll/styles/fragrance-scroll.css`.
 - **Pasos:**
@@ -149,7 +162,7 @@
 
 ### T-2.2: Render estático del desplegado (sin botella 3D)
 
-- **Estado:** pendiente
+- **Estado:** hecha
 - **Cubre:** RF-03, RF-04.1, RF-04.2, RF-06.6 (sólo el botón), RF-02.3, RF-02.4
 - **Archivos permitidos:** `src/fragrance-scroll/FragranceScroll.jsx`, `src/fragrance-scroll/index.js`, `src/fragrance-scroll/components/{ExpandedView,Background,IngredientImage,Panel,CloseButton,BottlePoster}.jsx`, `src/sandbox/SandboxApp.jsx`.
 - **Pasos:**
@@ -162,7 +175,7 @@
 
 ### T-2.3: Test de SSR
 
-- **Estado:** pendiente
+- **Estado:** hecha
 - **Cubre:** RNF-02
 - **Archivos permitidos:** `tests/ssr/render.test.jsx`, `vitest.config.js` (sólo si hace falta habilitar JSX en los tests).
 - **Aceptación:** `renderToString` de `FragranceScroll` en modo `expanded` no lanza errores; VE. El modo `collapsed` se suma a este test en T-5.1.
@@ -171,7 +184,7 @@
 
 ### T-3.1: `loadThree` + `BottleRig`
 
-- **Estado:** pendiente
+- **Estado:** plan propuesto
 - **Cubre:** RF-05.1, RF-05.2, RF-05.4, RF-05.5, D-01, D-02
 - **Archivos permitidos:** `package.json`, `package-lock.json` (sólo `three@0.185.1`), `src/fragrance-scroll/three/loadThree.js`, `src/fragrance-scroll/three/BottleRig.js`.
 - **Pasos:**
