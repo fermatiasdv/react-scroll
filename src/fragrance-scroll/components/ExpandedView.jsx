@@ -4,12 +4,12 @@ import { layoutFor } from '../lib/layout.js'
 import { sceneFor } from '../lib/scene.js'
 import { indexFromSlug } from '../lib/slug.js'
 import Background from './Background.jsx'
-import BottlePoster from './BottlePoster.jsx'
+import Bottle from './Bottle.jsx'
 import CloseButton from './CloseButton.jsx'
 import IngredientImage from './IngredientImage.jsx'
 import Panel from './Panel.jsx'
 
-// Pantalla del modo desplegado (RF-03, RF-04), por ahora estática: una sola fragancia y sin botella 3D.
+// Pantalla del modo desplegado (RF-03, RF-04), por ahora sin navegación: una sola fragancia.
 export default function ExpandedView({ assets, fragrances, initialSlug, onCloseExpanded }) {
   const viewport = useViewport()
   const index = indexFromSlug(fragrances, initialSlug)
@@ -40,18 +40,16 @@ export default function ExpandedView({ assets, fragrances, initialSlug, onCloseE
           stretch={scene.ingredient.stretch}
         />
         <Panel title={scene.title} ingredientsLine={scene.ingredientsLine} />
-        <div
-          className="fs-item fs-image fs-image-product"
-          style={{
-            left: scene.product.x,
-            top: scene.product.y,
-            width: scene.product.size,
-            height: scene.product.size,
-            opacity: 1,
-          }}
-        >
-          <BottlePoster src={assets.posters[fragrance.slug]} />
-        </div>
+        <Bottle
+          x={scene.product.x}
+          y={scene.product.y}
+          size={scene.product.size}
+          slug={fragrance.slug}
+          name={fragrance.name}
+          modelUrl={assets.model}
+          labelUrl={assets.labels[fragrance.slug] ?? assets.labels.default}
+          posterSrc={assets.posters[fragrance.slug]}
+        />
       </>
     )
   }
