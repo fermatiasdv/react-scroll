@@ -1,5 +1,10 @@
-import { useEffect, useRef } from 'react'
-import { BACKGROUND_TRANSITION_MS, LABEL_TRANSITION_MS, WORD_FADE_MS } from '../config/timing.js'
+import { useEffect, useRef, useState } from 'react'
+import {
+  BACKGROUND_TRANSITION_MS,
+  COLLAPSE_TO_CENTER_MS,
+  LABEL_TRANSITION_MS,
+  WORD_FADE_MS,
+} from '../config/timing.js'
 import { useNavigation } from '../hooks/useNavigation.js'
 import { useViewport } from '../hooks/useViewport.js'
 import { layoutFor } from '../lib/layout.js'
@@ -17,6 +22,8 @@ import Panel from './Panel.jsx'
 //    fondo hace el crossfade hacia el de la fragancia destino. El panel no se mueve todavía.
 //  - t = 500 (`entering`, el índice ya cambió): la etiqueta cambia con la botella de espaldas y ésta
 //    termina el giro; entran el ingrediente y el panel nuevos (el panel viejo se desmonta).
+// La carga inicial (RF-07.5), en cambio, es otro camino: la botella da una vuelta completa y el
+// ingrediente, oculto hasta entonces, aparece al 80% del giro. El panel ya está en su lugar.
 export default function ExpandedView({ assets, fragrances, initialSlug, onCloseExpanded }) {
   const viewport = useViewport()
   const navigation = useNavigation({
@@ -32,6 +39,20 @@ export default function ExpandedView({ assets, fragrances, initialSlug, onCloseE
   const labelUrl = assets.labels[fragrance.slug] ?? assets.labels.default
   // El fondo cruza hacia el destino desde t = 0, antes de que cambie el índice.
   const backgroundIndex = navigation.pendingIndex ?? index
+
+  // Giro de carga (RF-07.5). `introKey` cuenta los armados: el primero, y uno más por cada cambio de
+  // tamaño del viewport (rearmado por resize). El ingrediente espera a que la botella avise que
+  // llegó al 80% de ese giro (`revealedKey` alcanza a `introKey`).
+  const [introKey, setIntroKey] = useState(0)
+  const [revealedKey, setRevealedKey] = useState(-1)
+  const [measured, setMeasured] = useState(null)
+  if (viewport && (!measured || measured.width !== viewport.width || measured.height !== viewport.height)) {
+    setMeasured(viewport)
+    if (measured) setIntroKey(introKey + 1)
+  }
+  // Una transición pisa el giro de carga (cancela el giro): el ingrediente entra por la coreografía.
+  if (phase !== 'idle' && revealedKey !== introKey) setRevealedKey(introKey)
+  const introPending = revealedKey !== introKey
 
   useEffect(() => {
     const previous = previousPhase.current
@@ -66,7 +87,8 @@ export default function ExpandedView({ assets, fragrances, initialSlug, onCloseE
           y={scene.ingredient.y}
           height={scene.ingredient.height}
           stretch={scene.ingredient.stretch}
-          hidden={phase === 'leaving'}
+          hidden={phase === 'leaving' || introPending}
+          transitionMs={phase === 'idle' ? LABEL_TRANSITION_MS : COLLAPSE_TO_CENTER_MS}
         />
         <Panel
           key={index}
@@ -76,6 +98,8 @@ export default function ExpandedView({ assets, fragrances, initialSlug, onCloseE
         />
         <Bottle
           ref={bottleRef}
+          introKey={introKey}
+          onIntroReveal={setRevealedKey}
           x={scene.product.x}
           y={scene.product.y}
           size={scene.product.size}

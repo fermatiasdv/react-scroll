@@ -25,10 +25,18 @@ const POSTER_LAYER = { position: 'absolute', inset: 0 }
 // Por `ref` expone los giros de la transición (RF-07): medio giro de frente a espaldas al salir
 // (`spinOut`, easeInCubic) y de espaldas a frente al entrar (`swapAndSpinIn`, easeOutCubic), con la
 // misma duración para que la velocidad angular coincida en el empalme y no haya frenazo.
-const Bottle = forwardRef(function Bottle({ x, y, size, slug, name, modelUrl, labelUrl, posterSrc }, ref) {
+//
+// Carga inicial (RF-07.5): apenas el canvas pinta su primer frame, y cada vez que cambia `introKey`
+// (el rearmado por resize), da una vuelta completa de frente a frente. Al 80% del giro llama a
+// `onIntroReveal(introKey)`, que es cuando aparece el ingrediente.
+const Bottle = forwardRef(function Bottle(
+  { x, y, size, slug, name, modelUrl, labelUrl, posterSrc, introKey, onIntroReveal },
+  ref,
+) {
   const hostRef = useRef(null)
   const rigRef = useRef(null)
-  const latest = useRef({ labelUrl, size })
+  const latest = useRef({ labelUrl, size, introKey })
+  const onIntroRevealRef = useRef(onIntroReveal)
   // Modelo para el que el canvas ya pintó su primer frame; si cambia el modelo, vuelve el póster.
   const [readyModelUrl, setReadyModelUrl] = useState(null)
   const ready = readyModelUrl === modelUrl
@@ -55,7 +63,8 @@ const Bottle = forwardRef(function Bottle({ x, y, size, slug, name, modelUrl, la
 
   // Va antes que el efecto de creación, así al montar ya tiene los valores vigentes.
   useEffect(() => {
-    latest.current = { labelUrl, size }
+    latest.current = { labelUrl, size, introKey }
+    onIntroRevealRef.current = onIntroReveal
   })
 
   useEffect(() => {
@@ -99,7 +108,9 @@ const Bottle = forwardRef(function Bottle({ x, y, size, slug, name, modelUrl, la
         })
       })
       .catch(() => {
-        // Sin WebGL o con el modelo sin cargar, el póster se queda en su lugar.
+        // Sin WebGL o con el modelo sin cargar, el póster se queda en su lugar y el ingrediente no
+        // espera a un giro que no va a ocurrir.
+        if (!cancelled) onIntroRevealRef.current?.(latest.current.introKey)
       })
 
     return () => {
@@ -113,6 +124,13 @@ const Bottle = forwardRef(function Bottle({ x, y, size, slug, name, modelUrl, la
   useEffect(() => {
     rigRef.current?.setLabel(labelUrl)
   }, [labelUrl])
+
+  // Giro de carga (RF-07.5): defaults del rig, o sea una vuelta de SPIN_DURATION_MS con easeInOutCubic
+  // y `onReveal` al SPIN_REVEAL_FRACTION. Una transición lo cancela con `spinOut`.
+  useEffect(() => {
+    if (!ready) return
+    rigRef.current?.spin({ onReveal: () => onIntroRevealRef.current?.(introKey) })
+  }, [ready, introKey])
 
   useEffect(() => {
     rigRef.current?.setSize(Math.round(size))

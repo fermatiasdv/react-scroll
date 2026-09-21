@@ -25,7 +25,7 @@
 | T-3.4 | Verificación visual de etiquetas WebP | T-3.2 | hecha |
 | T-4.1 | `useNavigation`: swipe, rueda, teclado y timers | T-1.4, T-2.2 | hecha |
 | T-4.2 | Coreografía de la transición | T-3.2, T-4.1 | hecha |
-| T-4.3 | Giro de carga inicial | T-4.2 | pendiente |
+| T-4.3 | Giro de carga inicial | T-4.2 | hecha |
 | T-4.4 | Prueba en Android de gama media | T-4.3 | pendiente |
 | T-5.1 | Modo colapsado + abrir/cerrar simulados + última vista | T-3.3, T-4.2 | pendiente |
 | T-5.2 | Precarga | T-5.1 | pendiente |
@@ -256,7 +256,7 @@
 
 ### T-4.3: Giro de carga inicial
 
-- **Estado:** pendiente
+- **Estado:** hecha
 - **Cubre:** RF-07.5
 - **Archivos permitidos:** `src/fragrance-scroll/components/{ExpandedView,Bottle,IngredientImage,Panel}.jsx`.
 - **Aceptación:** **el usuario confirma visualmente** el giro de 2 s con el ingrediente apareciendo al 80%; VE.
