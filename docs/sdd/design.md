@@ -200,7 +200,7 @@ Acciones:
 - `BottleRig` es una clase:
 
 ```js
-const rig = await BottleRig.create(canvas, { size, pixelRatio, labelUrl });
+const rig = await BottleRig.create(canvas, { modelUrl, size, pixelRatio, labelUrl });
 rig.setSize(size);
 rig.setLabel(url);                                   // cambia la textura (cache por URL)
 rig.setYaw(rad);

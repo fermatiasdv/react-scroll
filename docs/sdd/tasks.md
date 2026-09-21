@@ -19,7 +19,7 @@
 | T-2.1 | `useViewport` + estilos base | T-1.3 | hecha |
 | T-2.2 | Render estático del desplegado (sin botella 3D) | T-2.1 | hecha |
 | T-2.3 | Test de SSR | T-2.2 | hecha |
-| T-3.1 | `loadThree` + `BottleRig` | T-2.2 | plan propuesto |
+| T-3.1 | `loadThree` + `BottleRig` | T-2.2 | hecha |
 | T-3.2 | `<Bottle>` persistente con póster provisorio | T-3.1 | pendiente |
 | T-3.3 | Herramienta de pósters + generación | T-3.2 | pendiente |
 | T-3.4 | Verificación visual de etiquetas WebP | T-3.2 | pendiente |
@@ -184,7 +184,7 @@
 
 ### T-3.1: `loadThree` + `BottleRig`
 
-- **Estado:** plan propuesto
+- **Estado:** hecha
 - **Cubre:** RF-05.1, RF-05.2, RF-05.4, RF-05.5, D-01, D-02
 - **Archivos permitidos:** `package.json`, `package-lock.json` (sólo `three@0.185.1`), `src/fragrance-scroll/three/loadThree.js`, `src/fragrance-scroll/three/BottleRig.js`.
 - **Pasos:**
