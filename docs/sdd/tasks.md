@@ -11,7 +11,7 @@
 | T-0.1 | Limpiar el template y crear la estructura | — | hecha |
 | T-0.1-fix | Excluir `legacy/` del lint | — | hecha |
 | T-0.2 | Vitest y alias al legacy | T-0.1, T-0.1-fix | hecha |
-| T-1.1 | Datos de fragancias, assets y constantes | T-0.2 | pendiente |
+| T-1.1 | Datos de fragancias, assets y constantes | T-0.2 | hecha |
 | T-1.2 | `layout.js` literal + tests contra el legacy | T-0.2 | pendiente |
 | T-1.3 | `slug.js` y `scene.js` + tests | T-1.1, T-1.2 | pendiente |
 | T-1.4 | Reducer de navegación + tests | T-1.1 | pendiente |
@@ -79,7 +79,7 @@
 
 ### T-1.1: Datos de fragancias, assets y constantes
 
-- **Estado:** pendiente
+- **Estado:** hecha
 - **Cubre:** RF-01, RF-02, design §4.1 a §4.4
 - **Archivos permitidos:** `src/fragrance-scroll/data/fragrances.js`, `src/fragrance-scroll/config/assets.js`, `src/fragrance-scroll/config/timing.js`, `src/fragrance-scroll/config/input.js`, `tests/unit/data.test.js`.
 - **Pasos:**
