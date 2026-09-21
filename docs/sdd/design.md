@@ -164,6 +164,7 @@ Reemplaza a `buildContent`/`relayoutContent` del legacy **sin mutación**: ante 
 ```js
 state = {
   index: number,                // fragancia actual
+  count: number,                // cantidad de fragancias (define cuál es el último borde)
   pendingIndex: number | null,  // destino durante la transición
   phase: 'idle' | 'leaving' | 'entering', // leaving: 0-500 ms; entering: 500-550 ms
   direction: 'down' | 'up' | null,
@@ -177,11 +178,11 @@ Acciones:
 
 | Acción | Qué hace |
 |---|---|
-| `NAVIGATE { direction, gestureId }` | La regla completa de `onWheel`/`onKeyDown`/`onTouchMove` del legacy: el bloqueo se chequea **antes** que el borde; en el borde se cierra salvo que sea el mismo gesto; si está bloqueado, `queueExitIfEdgeBound`. |
-| `SWAP` (t = 500) | `index = pendingIndex`, `phase = 'entering'`. |
-| `UNLOCK` (t = 550) | `phase = 'idle'`; si hay `queuedExit` y el índice está en ese borde, `closed = true`. |
+| `NAVIGATE { direction, gestureId }` | `direction` es `1` (avanzar) o `-1` (retroceder), como en el legacy; `state.direction` sigue siendo `'down'` o `'up'`. La regla completa de `onWheel`/`onKeyDown`/`onTouchMove` del legacy: el bloqueo se chequea **antes** que el borde; en el borde se cierra salvo que sea el mismo gesto; si está bloqueado, `queueExitIfEdgeBound`. |
+| `SWAP` (t = 500) | `index = pendingIndex`, `pendingIndex = null`, `phase = 'entering'`. Como el legacy (`L:scroll-motor.js`, `goToIndex`), durante `entering` (50 ms) no se encola una salida. |
+| `UNLOCK` (t = 550) | `phase = 'idle'` (no cambia `direction`, para que el panel termine su animación); si hay `queuedExit` y el índice está en ese borde, `closed = true`. |
 | `CLOSE` | ✕ o salida inmediata: `closed = true` y se limpia todo lo pendiente. |
-| `RESET { index }` | Arranque o reapertura en un índice. |
+| `RESET { index, count }` | Arranque o reapertura en un índice, con la cantidad de fragancias. |
 
 **Sin timers adentro:** el reducer es puro, y los timers viven en `useNavigation`.
 
