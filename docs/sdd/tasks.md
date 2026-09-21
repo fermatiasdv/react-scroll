@@ -13,8 +13,8 @@
 | T-0.2 | Vitest y alias al legacy | T-0.1, T-0.1-fix | hecha |
 | T-1.1 | Datos de fragancias, assets y constantes | T-0.2 | hecha |
 | T-1.2 | `layout.js` literal + tests contra el legacy | T-0.2 | hecha |
-| T-1.3 | `slug.js` y `scene.js` + tests | T-1.1, T-1.2 | pendiente |
-| T-1.4 | Reducer de navegación + tests | T-1.1 | pendiente |
+| T-1.3 | `slug.js` y `scene.js` + tests | T-1.1, T-1.2 | hecha |
+| T-1.4 | Reducer de navegación + tests | T-1.1 | plan propuesto |
 | T-2.1 | `useViewport` + estilos base | T-1.3 | pendiente |
 | T-2.2 | Render estático del desplegado (sin botella 3D) | T-2.1 | pendiente |
 | T-2.3 | Test de SSR | T-2.2 | pendiente |
@@ -104,7 +104,7 @@
 
 ### T-1.3: `slug.js` y `scene.js` + tests
 
-- **Estado:** pendiente
+- **Estado:** hecha
 - **Cubre:** RF-01.2, RF-03.3, RF-03.4, RF-04.1, RF-12.1, RF-12.2
 - **Archivos permitidos:** `src/fragrance-scroll/lib/slug.js`, `src/fragrance-scroll/lib/scene.js`, `tests/unit/slug.test.js`, `tests/legacy/scene.test.js`, `vitest.config.js` (sólo para agregar el alias `@scroll/panel` si hace falta).
 - **Pasos:** implementar según design §4.6 y §4.7.
@@ -119,7 +119,7 @@
 
 ### T-1.4: Reducer de navegación + tests
 
-- **Estado:** pendiente
+- **Estado:** plan propuesto
 - **Cubre:** RF-06.4, RF-06.5, RF-07.3, design §4.8
 - **Archivos permitidos:** `src/fragrance-scroll/lib/navigation.js`, `tests/unit/navigation.test.js`.
 - **Aceptación:** hay tests para cada uno de estos casos:
