@@ -14,7 +14,7 @@
 | T-1.1 | Datos de fragancias, assets y constantes | T-0.2 | hecha |
 | T-1.2 | `layout.js` literal + tests contra el legacy | T-0.2 | hecha |
 | T-1.3 | `slug.js` y `scene.js` + tests | T-1.1, T-1.2 | hecha |
-| T-1.4 | Reducer de navegación + tests | T-1.1 | plan propuesto |
+| T-1.4 | Reducer de navegación + tests | T-1.1 | hecha |
 | T-2.1 | `useViewport` + estilos base | T-1.3 | pendiente |
 | T-2.2 | Render estático del desplegado (sin botella 3D) | T-2.1 | pendiente |
 | T-2.3 | Test de SSR | T-2.2 | pendiente |
@@ -119,7 +119,7 @@
 
 ### T-1.4: Reducer de navegación + tests
 
-- **Estado:** plan propuesto
+- **Estado:** hecha
 - **Cubre:** RF-06.4, RF-06.5, RF-07.3, design §4.8
 - **Archivos permitidos:** `src/fragrance-scroll/lib/navigation.js`, `tests/unit/navigation.test.js`.
 - **Aceptación:** hay tests para cada uno de estos casos:
