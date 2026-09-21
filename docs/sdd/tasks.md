@@ -12,7 +12,7 @@
 | T-0.1-fix | Excluir `legacy/` del lint | — | hecha |
 | T-0.2 | Vitest y alias al legacy | T-0.1, T-0.1-fix | hecha |
 | T-1.1 | Datos de fragancias, assets y constantes | T-0.2 | hecha |
-| T-1.2 | `layout.js` literal + tests contra el legacy | T-0.2 | pendiente |
+| T-1.2 | `layout.js` literal + tests contra el legacy | T-0.2 | hecha |
 | T-1.3 | `slug.js` y `scene.js` + tests | T-1.1, T-1.2 | pendiente |
 | T-1.4 | Reducer de navegación + tests | T-1.1 | pendiente |
 | T-2.1 | `useViewport` + estilos base | T-1.3 | pendiente |
@@ -94,7 +94,7 @@
 
 ### T-1.2: `layout.js` literal + tests contra el legacy
 
-- **Estado:** pendiente
+- **Estado:** hecha
 - **Cubre:** RF-03.1, RF-03.2, RNF-04
 - **Archivos permitidos:** `src/fragrance-scroll/lib/layout.js`, `tests/legacy/layout.test.js`.
 - **Pasos:**
