@@ -27,8 +27,9 @@
 | T-4.2 | Coreografía de la transición | T-3.2, T-4.1 | hecha |
 | T-4.3 | Giro de carga inicial | T-4.2 | hecha |
 | T-4.4 | Prueba en Android de gama media | T-4.3 | pendiente |
-| T-5.1 | Modo colapsado + abrir/cerrar simulados + última vista | T-3.3, T-4.2 | en verificación |
-| T-5.1-fix | Salto entre póster y botella 3D al abrir el desplegado | T-5.1 | en verificación |
+| T-5.1 | Modo colapsado + abrir/cerrar simulados + última vista | T-3.3, T-4.2 | hecha |
+| T-5.1-fix | Salto entre póster y botella 3D al abrir el desplegado | T-5.1 | hecha |
+| T-5.1-fix2 | Bloqueo del hilo principal al abrir el desplegado | T-5.1-fix | pendiente |
 | T-5.2 | Precarga | T-5.1 | pendiente |
 | T-5.3 | Sandbox: secciones de relleno | T-5.1 | pendiente |
 | T-6.1 | Auditoría final contra la spec | todas | pendiente |
@@ -274,7 +275,7 @@
 
 ### T-5.1: Modo colapsado + abrir/cerrar simulados + última vista
 
-- **Estado:** en verificación
+- **Estado:** hecha
 - **Cubre:** RF-06.7, RF-08, RF-09, RF-12.1, RF-13.2, AJUSTE-04
 - **Archivos permitidos:** `src/fragrance-scroll/components/{CollapsedView,ShowButton}.jsx`, `src/fragrance-scroll/FragranceScroll.jsx`, `src/fragrance-scroll/index.js` (sólo para exportar `localStorageStorage`), `src/fragrance-scroll/components/ExpandedView.jsx`, `src/fragrance-scroll/lib/storage.js`, `src/sandbox/SandboxApp.jsx`, `tests/unit/storage.test.js`, `tests/ssr/render.test.jsx`.
 - **Aceptación:**
@@ -286,15 +287,27 @@
 
 ### T-5.1-fix: Salto entre el póster y la botella 3D al abrir el desplegado
 
-- **Estado:** en verificación
+- **Estado:** hecha
 - **Cubre:** RF-10.3 (el reemplazo del póster por el canvas es sin parpadeo), RF-03.5, RNF-03
 - **Archivos permitidos:** `src/fragrance-scroll/hooks/useViewport.js`, `src/fragrance-scroll/three/BottleRig.js`.
 - **Contexto:** al tocar "Show fragrances" pasan ~250 a 290 ms hasta que arranca el giro, con un bloqueo del hilo principal de ~150 ms (PMREM + compilación de shaders). Además, el colapsado puede quedar calculado con un ancho distinto al del desplegado (media barra de scroll ≈ 7,5 px).
 - **Aceptación:**
-  - el `longtask` de la primera apertura baja de forma medible respecto de los ~145 a 166 ms de hoy;
   - el póster no se quita hasta que el canvas ya se compuso al menos un frame;
   - el póster y el título no se corren al pasar del colapsado al desplegado;
   - **el usuario confirma visualmente** que el salto desapareció o que mejoró, y en ese caso se registra qué queda;
+  - VE.
+- **Resultado:** el usuario confirmó que el parpadeo desapareció. Queda: en la segunda apertura la botella se ve quieta ~150 ms antes de girar (el renderer y el PMREM se recrean en cada apertura, D-01). La reducción del `longtask` pasó a T-5.1-fix2.
+
+### T-5.1-fix2: Bloqueo del hilo principal al abrir el desplegado
+
+- **Estado:** pendiente
+- **Cubre:** RNF-03
+- **Archivos permitidos:** `src/fragrance-scroll/three/BottleRig.js`.
+- **Contexto:** con T-5.1-fix el póster ya cubre el bloqueo, pero el `longtask` sigue ahí: medido en Chrome con caché (script de tracing sobre el sandbox, GPU real), la primera apertura da 86 a 205 ms y la segunda ~115 a 166 ms (crear el contexto WebGL, el PMREM y compilar los shaders). La solución tiene que respetar D-01 (un renderer por montaje); si eso no alcanza, se propone un cambio de diseño antes de tocar código.
+- **Aceptación:**
+  - el `longtask` de la primera y de la segunda apertura baja de forma medible respecto de los valores del contexto, con el mismo método de medición;
+  - sin parpadeo entre el póster y la botella 3D (lo logrado en T-5.1-fix se mantiene);
+  - **el usuario confirma visualmente** la apertura;
   - VE.
 
 ### T-5.2: Precarga
