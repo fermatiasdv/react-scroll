@@ -29,9 +29,9 @@
 | T-4.4 | Prueba en Android de gama media | T-4.3 | pendiente |
 | T-5.1 | Modo colapsado + abrir/cerrar simulados + última vista | T-3.3, T-4.2 | hecha |
 | T-5.1-fix | Salto entre póster y botella 3D al abrir el desplegado | T-5.1 | hecha |
-| T-5.1-fix2 | Bloqueo del hilo principal al abrir el desplegado | T-5.1-fix | pendiente |
-| T-5.2 | Precarga | T-5.1 | pendiente |
-| T-5.3 | Sandbox: secciones de relleno | T-5.1 | pendiente |
+| T-5.1-fix2 | Bloqueo del hilo principal al abrir el desplegado | T-5.1-fix | bloqueada (sin mejora medible) |
+| T-5.2 | Precarga | T-5.1 | hecha |
+| T-5.3 | Sandbox: secciones de relleno | T-5.1 | hecha |
 | T-6.1 | Auditoría final contra la spec | todas | pendiente |
 | T-7.x | Empaquetado en Tapcart | T1 de `ajustes.md` | bloqueada (sin acceso a Tapcart) |
 
@@ -300,7 +300,7 @@
 
 ### T-5.1-fix2: Bloqueo del hilo principal al abrir el desplegado
 
-- **Estado:** pendiente
+- **Estado:** bloqueada (sin mejora medible dentro de D-01 y del archivo permitido; ver Resultado)
 - **Cubre:** RNF-03
 - **Archivos permitidos:** `src/fragrance-scroll/three/BottleRig.js`.
 - **Contexto:** con T-5.1-fix el póster ya cubre el bloqueo, pero el `longtask` sigue ahí: medido en Chrome con caché (script de tracing sobre el sandbox, GPU real), la primera apertura da 86 a 205 ms y la segunda ~115 a 166 ms (crear el contexto WebGL, el PMREM y compilar los shaders). La solución tiene que respetar D-01 (un renderer por montaje); si eso no alcanza, se propone un cambio de diseño antes de tocar código.
@@ -309,23 +309,37 @@
   - sin parpadeo entre el póster y la botella 3D (lo logrado en T-5.1-fix se mantiene);
   - **el usuario confirma visualmente** la apertura;
   - VE.
+- **Resultado:** instrumenté el constructor con `performance.mark` (temporal, no queda en el código) y medí en Chrome (headless y headed, GPU real, la misma AMD Radeon), con 6 aperturas seguidas por corrida para separar el costo de sesión (una vez) del costo por apertura:
+  - la hipótesis del Contexto no se sostiene: en caliente, crear el renderer + el PMREM + armar la escena tarda ~25 a 40 ms en total, y `compileAsync` (los shaders) resuelve en paralelo sin bloquear;
+  - el bloqueo real está en el primer `render()`, porque el vidrio usa `transmission` y three.js recién ahí arma (una vez por renderer) el render target de transmisión — con mipmaps y MSAA al tamaño del canvas. Confirmé la causa en el código de `three` (`WebGLRenderer.renderTransmissionPass`);
+  - probé `renderer.transmissionResolutionScale = 0.25` (menor resolución de ese buffer, sin cambio visible: capturas idénticas a ojo). Con 12 muestras (6 antes, 6 después) el resultado **no bajó de forma medible**: 106 a 167 ms antes, 101 a 177 ms después, mismo rango;
+  - separar el trabajo del constructor en más cuadros con `requestAnimationFrame` tampoco separó nada: en este entorno, un `rAF` encadenado después de que se resuelve `compileAsync` corre pegado al mismo cuadro (probado en headless y headed);
+  - conclusión: el ~100 a 170 ms que queda por apertura es el costo de crear un contexto WebGL nuevo y volver a subirle a la GPU toda la geometría y las texturas de la botella — exactamente lo que impone D-01 (un renderer nuevo por apertura). No encontré una forma de bajarlo tocando sólo `BottleRig.js` sin compartir recursos de GPU entre aperturas, que es un cambio de diseño, no de código;
+  - no quedó ningún cambio en el archivo: revertí todo lo probado (confirmado con `git diff`, sin diferencias).
+  - **Pendiente decisión del usuario:** cerrar la tarea aceptando que este costo es inherente a D-01 (el símptoma visual ya lo resolvió T-5.1-fix), o proponer un cambio de diseño (por ejemplo, mantener vivo un contexto compartido sólo para pre-subir recursos, fuera del ciclo de vida de la pantalla desplegada) para evaluarlo como una tarea nueva.
 
 ### T-5.2: Precarga
 
-- **Estado:** pendiente
+- **Estado:** hecha
 - **Cubre:** RF-11, AJUSTE-12
 - **Archivos permitidos:** `src/fragrance-scroll/lib/preload.js`, `src/fragrance-scroll/components/CollapsedView.jsx`, `tests/unit/preload.test.js`.
 - **Aceptación:**
   - en la pestaña Network, después del `load` se descargan, en orden, three, el GLB, las etiquetas y el resto;
   - con `saveData` simulado no se descarga nada;
   - VE.
+- **Resultado:** verificado con un script de Chrome (CDP) sobre `Network.requestWillBeSent`:
+  - orden confirmado: los chunks de `three`/`GLTFLoader`, después `bottle.glb`, después las 10 etiquetas (en el orden de `assets.labels`), después los 4 fondos y las 10 imágenes de ingrediente;
+  - con `navigator.connection = { saveData: true }` simulado (inyectado antes de que corra cualquier script de la página), ninguno de esos pedidos aparece — sólo lo que el colapsado ya necesita para su propio render (su fondo);
+  - 220 tests pasan (8 nuevos de `preload.test.js`), lint y build en verde;
+  - archivos tocados = archivos permitidos (`lib/preload.js`, `components/CollapsedView.jsx`, `tests/unit/preload.test.js`), sin `console.log`, sin AJUSTE nuevo (se referencia AJUSTE-12, ya en `ajustes.md`).
 
 ### T-5.3: Sandbox: secciones de relleno
 
-- **Estado:** pendiente
+- **Estado:** hecha
 - **Cubre:** RF-13.1, AJUSTE-05
 - **Archivos permitidos:** `src/sandbox/{SandboxApp,FillerSection}.jsx`, `src/sandbox/sandbox.css`.
 - **Aceptación:** hay dos secciones antes y una después del bloque colapsado, y el scroll normal funciona; VE.
+- **Resultado:** verificado con capturas en distintos `scrollTop` (script de Chrome): las dos secciones antes, el bloque colapsado y la sección después se ven en orden, con el scroll de la página funcionando de punta a punta (`scrollHeight` 3056px = 4 pantallas). VE en verde.
 
 ## Fase 6: cierre
 

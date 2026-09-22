@@ -1,6 +1,7 @@
-import { useSyncExternalStore } from 'react'
+import { useEffect, useSyncExternalStore } from 'react'
 import { useViewport } from '../hooks/useViewport.js'
 import { layoutFor } from '../lib/layout.js'
+import { schedulePreload } from '../lib/preload.js'
 import { sceneFor } from '../lib/scene.js'
 import { indexFromSlug } from '../lib/slug.js'
 import { readLastSlug } from '../lib/storage.js'
@@ -24,6 +25,11 @@ export default function CollapsedView({ assets, fragrances, storage, showLabel, 
   const lastSlug = useSyncExternalStore(subscribeNever, () => readLastSlug(storage), () => null)
   // Un slug ausente o inválido cae en la primera (RF-09.2, RF-12.1).
   const index = indexFromSlug(fragrances, lastSlug)
+
+  // Precarga (RF-11): se dispara una sola vez al montar el colapsado.
+  useEffect(() => {
+    schedulePreload(assets)
+  }, [assets])
 
   const fragrance = fragrances[index]
   const style = {}

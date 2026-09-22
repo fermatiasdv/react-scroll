@@ -1,0 +1,41 @@
+/*
+ * Secciones de relleno (RF-13.1, AJUSTE-05): sólo para el sandbox, no son parte del componente
+ * reutilizable. Equivalente a `.fake-section` del POC de `labs` (legacy/labs-scroll/index.html).
+ */
+.filler-section {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 8vw;
+  text-align: center;
+  font-family: 'Cormorant Garamond', serif;
+  color: #fff;
+}
+
+.filler-section-eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  font-size: 0.85rem;
+  opacity: 0.6;
+}
+
+.filler-section h1 {
+  font-size: clamp(1.8rem, 5vw, 3.2rem);
+  font-weight: 600;
+  max-width: 32ch;
+}
+
+.filler-section-before-1 {
+  background-color: #22303f;
+}
+
+.filler-section-before-2 {
+  background-color: #2f3f4f;
+}
+
+.filler-section-after {
+  background-color: #241f30;
+}
