@@ -173,7 +173,7 @@ Al pasar de la fragancia A a la B (`L:scroll-motor.js`, `goToIndex`; `L:scroll-s
 
 ### RF-13: Sandbox de desarrollo
 
-- **RF-13.1** El sandbox muestra secciones de relleno antes y después del bloque colapsado, para simular la home (AJUSTE-05). Esas secciones **no** forman parte del componente reutilizable.
+- **RF-13.1** El sandbox muestra únicamente el bloque colapsado/desplegado, sin secciones de relleno alrededor (AJUSTE-05, quitado antes de tiempo — ver `docs/ajustes.md`).
 - **RF-13.2** El componente reutilizable recibe por props lo que en Tapcart vendrá de afuera: la config de assets, el texto del botón, el storage y las funciones `openExpanded`/`closeExpanded`.
 
 ## 4. Requisitos no funcionales

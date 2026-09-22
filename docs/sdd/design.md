@@ -30,8 +30,7 @@
 src/
   main.jsx                      # entrada del sandbox (monta <SandboxApp/>)
   sandbox/
-    SandboxApp.jsx              # shell del sandbox: secciones de relleno + bloque (AJUSTE-04, 05)
-    FillerSection.jsx           # sección de relleno (AJUSTE-05)
+    SandboxApp.jsx              # shell del sandbox: sólo el bloque (AJUSTE-04)
     sandbox.css
   fragrance-scroll/             # === componente reutilizable (lo que va a Tapcart) ===
     index.js                    # exports públicos

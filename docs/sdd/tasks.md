@@ -34,7 +34,8 @@
 | T-5.1-fix2 | Bloqueo del hilo principal al abrir el desplegado | T-5.1-fix | bloqueada (sin mejora medible) |
 | T-5.2 | Precarga | T-5.1 | hecha |
 | T-5.3 | Sandbox: secciones de relleno | T-5.1 | hecha |
-| T-6.1 | Auditoría final contra la spec | todas | pendiente |
+| T-5.4 | Sandbox: quitar las secciones de relleno | T-5.3 | hecha |
+| T-6.1 | Auditoría final contra la spec | todas | hecha |
 | T-7.x | Empaquetado en Tapcart | T1 de `ajustes.md` | bloqueada (sin acceso a Tapcart) |
 
 ---
@@ -382,14 +383,27 @@
 - **Aceptación:** hay dos secciones antes y una después del bloque colapsado, y el scroll normal funciona; VE.
 - **Resultado:** verificado con capturas en distintos `scrollTop` (script de Chrome): las dos secciones antes, el bloque colapsado y la sección después se ven en orden, con el scroll de la página funcionando de punta a punta (`scrollHeight` 3056px = 4 pantallas). VE en verde.
 
+### T-5.4: Sandbox: quitar las secciones de relleno
+
+- **Estado:** hecha
+- **Cubre:** RF-13.1 (revisado), AJUSTE-05 (aplicado)
+- **Archivos permitidos:** `src/sandbox/SandboxApp.jsx`, borrar `src/sandbox/FillerSection.jsx`, `src/sandbox/sandbox.css`.
+- **Pasos:** sacar `<FillerSection>` de `SandboxApp.jsx` (antes y después del bloque), borrar `FillerSection.jsx` y las reglas de `sandbox.css` que sólo aplican a esas secciones.
+- **Aceptación:**
+  - el sandbox muestra sólo el bloque, sin secciones de relleno;
+  - **el usuario confirma visualmente** que, en la primera fragancia, un swipe/rueda hacia arriba (o ✕) cierra el desplegado (desaparece la ✕, se ve el póster y "Show fragrances"), y que lo mismo pasa hacia abajo en la última fragancia — sin páginas fake de por medio;
+  - VE.
+- **Resultado:** verificado con el navegador: el sandbox muestra sólo el bloque, sin scroll ni secciones antes/después; 220 tests, lint y build en verde; archivos tocados = archivos permitidos. El usuario probó con swipe real en ambos bordes (primera y última fragancia) y confirmó que cierra bien.
+
 ## Fase 6: cierre
 
 ### T-6.1: Auditoría final contra la spec
 
-- **Estado:** pendiente
+- **Estado:** hecha
 - **Archivos permitidos:** `docs/**` (sólo para registrar resultados).
 - **Pasos:** pedir `auditar` (ver `CLAUDE.md`): cada RF y RNF tiene que tener implementación y verificación; cada AJUSTE tiene que estar reflejado en el código con su comentario.
 - **Aceptación:** un informe sin desvíos, o con desvíos convertidos en tareas nuevas.
+- **Resultado (2026-09-22):** informe sin desvíos. Trazabilidad completa RF-01 a RF-13 y RNF-01 a RNF-07 (implementación + verificación, automatizada o visual ya registrada); sin código huérfano; AJUSTES en código (01, 02, 03, 04, 06, 07, 11, 12) coinciden con `docs/ajustes.md`, AJUSTE-05 ya aplicado; sin `console.log`, sin accesos a `window`/`document`/`navigator` a nivel de módulo, `three` sólo desde `loadThree.js`, URLs de assets sólo en `config/assets.js`, sin dependencias fuera de `design.md` §2; `tasks.md` consistente con el código real.
 
 ## Fase 7: Tapcart (bloqueada)
 

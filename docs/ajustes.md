@@ -57,14 +57,6 @@ La mayoría de los ajustes se aplican en alguno de estos momentos:
 - **Cuándo se reemplaza:** en **T2**.
 - **Cómo:** reemplazar la simulación por las acciones reales de Tapcart. Queda aislada detrás de dos funciones (`openExpanded()` / `closeExpanded()`) para que el cambio toque un solo archivo.
 
-### AJUSTE-05 — Secciones de relleno alrededor del bloque colapsado
-
-- **Qué es:** secciones de color con un título grande, antes y después del bloque colapsado, para simular el resto de la home en el sandbox y probar que el bloque convive con un scroll normal.
-- **Legacy:** equivalente a las `fake-section-*` del POC de `labs`. En el tema ese rol lo cumplían las secciones reales de la home.
-- **Por qué quedó:** sin el resto de la home no se puede probar la transición entre la home y el bloque.
-- **Cuándo se quita:** en **T2**. En Tapcart, lo que rodea al bloque son los otros bloques de la home.
-- **Cómo:** viven sólo en el shell del sandbox (fuera del componente reutilizable), así que se descartan sin tocar el bloque.
-
 ### AJUSTE-06 — Assets servidos localmente
 
 - **Qué es:** el modelo GLB, las etiquetas, los fondos y las imágenes de ingredientes se sirven desde el sandbox, en `public/fragrance-scroll/` (4,8 MB en total):
@@ -173,4 +165,6 @@ Además, lo siguiente es propio del tema de Shopify y **no aplica en Tapcart**, 
 
 ## Aplicados
 
-_(vacío)_
+### AJUSTE-05 — Secciones de relleno alrededor del bloque colapsado (2026-09-22)
+
+Se quitó del sandbox antes de lo previsto (el disparador original era T2), a pedido del usuario, para que la auditoría final (T-6.1) audite sólo el componente reutilizable sin elementos de prueba alrededor. Sin cambios en el comportamiento de cierre por borde (RF-06.5/RF-08.5), que no dependía de estas secciones.
