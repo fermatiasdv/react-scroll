@@ -211,7 +211,8 @@ rig.dispose();                                       // libera el renderer al de
 
 - Materiales, luces, cámara, tone mapping, geometría de la etiqueta y constantes: **copia literal** de `L:scroll-bottle.js`, salvo:
   - no hay pool de renderers ni `WeakMap`, porque D-01 los vuelve innecesarios,
-  - el tilt con el mouse queda marcado como AJUSTE-02.
+  - el tilt con el mouse queda marcado como AJUSTE-02,
+  - el `pixelRatio` del renderer tiene un techo de 2 (`Math.min(pixelRatio, 2)`), en vez del `devicePixelRatio` crudo del legacy — RNF-03: en gama media Android puede llegar a ~3x, y agrava el costo del paso de `transmission` y del MSAA en cada frame de la coreografía (ver T-4.4-fix).
 
 ### 4.11 Componentes
 

@@ -338,7 +338,8 @@ export class BottleRig {
     await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)))
     const rig = new BottleRig(THREE, canvas, master, {
       size,
-      pixelRatio: pixelRatio ?? (window.devicePixelRatio || 1),
+      // Techo de 2, no el devicePixelRatio crudo del legacy (RNF-03, ver docs/sdd/design.md §4.10).
+      pixelRatio: Math.min(pixelRatio ?? (window.devicePixelRatio || 1), 2),
       labelUrl,
     })
     await rig.#compiled

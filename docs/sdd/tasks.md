@@ -26,7 +26,9 @@
 | T-4.1 | `useNavigation`: swipe, rueda, teclado y timers | T-1.4, T-2.2 | hecha |
 | T-4.2 | Coreografía de la transición | T-3.2, T-4.1 | hecha |
 | T-4.3 | Giro de carga inicial | T-4.2 | hecha |
-| T-4.4 | Prueba en Android de gama media | T-4.3 | pendiente |
+| T-4.4 | Prueba en Android de gama media | T-4.3 | hecha |
+| T-4.4-fix | Diagnóstico de rendimiento en Android de gama media | T-4.4 | hecha |
+| T-4.4-fix2 | Techo de pixelRatio en BottleRig | T-4.4-fix | hecha |
 | T-5.1 | Modo colapsado + abrir/cerrar simulados + última vista | T-3.3, T-4.2 | hecha |
 | T-5.1-fix | Salto entre póster y botella 3D al abrir el desplegado | T-5.1 | hecha |
 | T-5.1-fix2 | Bloqueo del hilo principal al abrir el desplegado | T-5.1-fix | bloqueada (sin mejora medible) |
@@ -265,11 +267,50 @@
 
 ### T-4.4: Prueba en Android de gama media
 
-- **Estado:** pendiente
+- **Estado:** hecha
 - **Cubre:** RNF-03
 - **Archivos permitidos:** `docs/ajustes.md` y `docs/sdd/tasks.md` (sólo para registrar resultados). **Sin cambios de código:** si hay problemas, se proponen como cambio de spec o como tarea nueva.
 - **Pasos:** el usuario abre el sandbox (`npm run dev -- --host`) en el teléfono y recorre las 10 fragancias.
 - **Aceptación:** el usuario reporta la fluidez y cualquier demora; se registran los resultados.
+- **Resultado:** el usuario reportó:
+  - en **desktop**, la animación se ve perfecta;
+  - en un **Samsung Galaxy A54** real (dispositivo de gama media, acorde a RNF-03), las animaciones se ven **entrecortadas**;
+  - en **Chrome DevTools** con emulación de dispositivo **Samsung Galaxy S8+**, también se ven **entrecortadas**.
+  - RNF-03 ("el cambio de fragancia no puede tener demoras perceptibles") **no se cumple** en gama media. Queda pendiente una tarea de diagnóstico/mejora — ver propuesta en el chat.
+
+### T-4.4-fix: Diagnóstico de rendimiento en Android de gama media
+
+- **Estado:** hecha
+- **Cubre:** RNF-03
+- **Archivos permitidos:** `docs/ajustes.md` y `docs/sdd/tasks.md` (sólo para registrar resultados). Sin cambios de código: es diagnóstico, no arreglo. Si el diagnóstico apunta a una causa concreta, se propone la tarea de corrección (`T-4.4-fix2` o similar) con sus archivos permitidos recién ahí.
+- **Contexto:** confirmado en T-4.4: en desktop la transición se ve perfecta; en un Samsung Galaxy A54 real y en la emulación de Galaxy S8+ (Chrome DevTools) se ve entrecortada. Hace falta saber qué fase de la coreografía (RF-07: giro continuo, cambio de etiqueta, fade+zoom del ingrediente, crossfade de fondo, panel direccional) concentra el costo, y si es carga de GPU (three.js/render) o de hilo principal (JS/CSS/layout).
+- **Pasos:**
+  1. Perfilar con el panel Performance de Chrome DevTools, con throttling de CPU (4x–6x) + emulación Galaxy S8+, o con remote debugging (USB) contra el A54 real si está disponible, durante varios cambios de fragancia consecutivos.
+  2. Identificar los frames largos (`longtask`) y a qué fase de RF-07 corresponden.
+  3. Separar costo de GPU (rasterizado/composición, three.js) de costo de hilo principal (scripting, layout, recalculo de estilos).
+  4. Registrar hallazgos en `tasks.md` (mismo formato que el "Resultado" de T-5.1-fix2).
+- **Aceptación:** el informe identifica la(s) fase(s) responsable(s) y su causa probable, con evidencia del profiler (capturas o resumen de los `longtask`); VE no aplica (no hay código nuevo).
+- **Resultado:**
+  - **El perfilado automatizado no dio datos válidos.** Instrumenté `PerformanceObserver({entryTypes:['longtask']})` y un contador de deltas de `requestAnimationFrame` en el sandbox (vía la extensión de Chrome), abrí el desplegado y navegué varias fragancias con la rueda. El resultado: deltas de rAF de ~1016 ms (≈1 fps) y 0 `longtask`. Confirmé la causa con `document.hidden` → `true` (con `document.hasFocus()` → `true`): Chrome trata la pestaña automatizada como en segundo plano y frena `requestAnimationFrame`/timers a ~1 vez por segundo, sin importar el trabajo real. Esto invalida cualquier medición de frames o `longtask` tomada así — no hay forma, con las herramientas de navegador disponibles en este entorno, de forzar que la pestaña se considere visible. **No hay evidencia de profiler real.**
+  - **Análisis de código (hipótesis, no confirmada empíricamente):** cada cambio de fragancia dispara `spinOut()` y `swapAndSpinIn()` (`ExpandedView.jsx:68-69`), que son dos `spin()` de `COLLAPSE_TO_CENTER_MS` = 500 ms cada uno (`timing.js:4`) con un `requestAnimationFrame` propio que llama a `renderer.render()` en cada frame (`BottleRig.js:490-514`) — o sea, ~1 s de renders continuos por cada transición. Tres factores del material/renderer, los tres **copiados literales del legacy** (`legacy/my-initial-store/assets/scroll-bottle.js:512,524,527-528`, ver design §4.10), agravan ese costo en GPUs móviles:
+    1. `transmission: 1.0` en el material del vidrio (`BottleRig.js:195`): three.js hace un paso de render extra (`renderTransmissionPass`, con mipmaps) en **cada** `render()`, no sólo una vez al crear el renderer — lo de T-5.1-fix2 era sobre el costo único de armar ese render target, no sobre el costo recurrente del paso en sí.
+    2. `antialias: true` (`BottleRig.js:353`): MSAA con resolve en cada frame.
+    3. `renderer.setPixelRatio(pixelRatio)` sin techo, usando `window.devicePixelRatio` crudo (`BottleRig.js:341`, `354`): en gama media Android suele ser ~2.5–3x (vs. 1–2x típico de desktop), lo que multiplica los píxeles que hay que renderizar, resolver (AA) y capturar (transmission) en cada uno de esos frames.
+  - Como los tres son copia literal del legacy, **esto no es una regresión de la migración**: es probable que el mismo costo exista hoy en la sección de Shopify real, sólo que nunca se había medido contra el criterio de RNF-03 en un dispositivo real.
+  - **Decisión del usuario:** aceptó el análisis de código como suficiente, sin evidencia de profiler en vivo (no fue posible obtenerla con las herramientas de navegador disponibles en este entorno). Se pasa a proponer la tarea de corrección — ver T-4.4-fix2.
+
+### T-4.4-fix2: Techo de pixelRatio en BottleRig
+
+- **Estado:** hecha
+- **Cubre:** RNF-03, D-02
+- **Archivos permitidos:** `src/fragrance-scroll/three/BottleRig.js`.
+- **Contexto:** T-4.4-fix identificó `pixelRatio` sin techo (junto con `transmission` y `antialias`, ambos copia literal del legacy) como causa probable del entrecortado en gama media. Este es el experimento de menor riesgo: no cambia materiales ni geometría, sólo la resolución de render.
+- **Pasos:** en `BottleRig.create` (`BottleRig.js:341`), techar el `pixelRatio` resuelto a 2: `Math.min(pixelRatio ?? window.devicePixelRatio ?? 1, 2)`.
+- **Aceptación:**
+  - **el usuario confirma visualmente** que la botella se sigue viendo bien (sin pixelado perceptible) en desktop;
+  - **el usuario reporta**, en el A54 real y en la emulación Galaxy S8+ de DevTools, si la fluidez mejoró respecto de T-4.4;
+  - VE.
+- **Resultado:** el usuario confirmó, en el A54 real y en la emulación Galaxy S8+, que la botella se ve bien y que la fluidez mejoró ("anda perfecto"). VE en verde (220 tests, lint y build). Hipótesis de T-4.4-fix confirmada: el `pixelRatio` crudo era (al menos parte de) la causa del entrecortado en gama media.
 
 ## Fase 5: modo colapsado, precarga y sandbox
 
