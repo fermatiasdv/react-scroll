@@ -302,6 +302,7 @@ export class BottleRig {
   #firstFrameDone = false
   #firstFrameCallbacks = []
   #firstFrameHandle = null
+  #compiled // Promise (nunca rechaza): los shaders de la botella ya están compilados
 
   // AJUSTE-02: hover tilt, sólo para desarrollo. Ver docs/ajustes.md.
   #isHovered = false
@@ -314,8 +315,9 @@ export class BottleRig {
    * cuadro visible coincide con el cuadro cuadrado del canvas, así que un objeto de tamaño N en
    * unidades de mundo ocupa la fracción N/2 del cuadro (la botella mide lo que layout.js cree).
    *
-   * Se resuelve cuando three y el GLB están cargados y el renderer creado; la textura de la
-   * etiqueta puede seguir cargando (ver onFirstFrame). Rechaza si falla la carga o el WebGL.
+   * Se resuelve cuando three y el GLB están cargados, el renderer creado y los shaders compilados
+   * (sin bloquear el hilo principal, ver el constructor); la textura de la etiqueta puede seguir
+   * cargando (ver onFirstFrame). Rechaza si falla la carga o el WebGL.
    *
    * @param {HTMLCanvasElement} canvas
    * @param {object} options
@@ -328,11 +330,19 @@ export class BottleRig {
   static async create(canvas, { modelUrl, size, pixelRatio, labelUrl }) {
     const { THREE, GLTFLoader } = await loadThree()
     const master = await getMasterModel(THREE, GLTFLoader, modelUrl)
-    return new BottleRig(THREE, canvas, master, {
+    // Un frame de espera antes de crear el renderer (contexto WebGL + PMREM, síncronos). Con three
+    // y el GLB ya en caché (segunda apertura en adelante) todo lo anterior se resuelve en
+    // microtasks pegados al montaje, y sin esta espera el bloqueo corre antes de que se pinte el
+    // póster (RF-10.3). Dos rAF, no uno: el primero corre antes del paint de su frame; recién el
+    // segundo llega con el póster ya pintado.
+    await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)))
+    const rig = new BottleRig(THREE, canvas, master, {
       size,
       pixelRatio: pixelRatio ?? (window.devicePixelRatio || 1),
       labelUrl,
     })
+    await rig.#compiled
+    return rig
   }
 
   constructor(THREE, canvas, master, { size, pixelRatio, labelUrl }) {
@@ -382,18 +392,31 @@ export class BottleRig {
     canvas.addEventListener('mousemove', this.#handleMouseMove)
     canvas.addEventListener('mouseleave', this.#handleMouseLeave)
 
-    // Primer dibujo ya con el modelo puesto (compila los shaders). La etiqueta carga de forma
-    // asíncrona: cuando termina se redibuja, y recién ahí cuenta como primer frame (RF-10.3).
-    this.#draw()
-    label.ready.then(() => {
+    // Los shaders se compilan de forma asíncrona (KHR_parallel_shader_compile), para que el primer
+    // dibujo no bloquee el hilo principal. Si la compilación falla, se compilan en el primer dibujo.
+    this.#compiled = renderer.compileAsync(scene, camera).then(
+      () => {},
+      () => {},
+    )
+    // Primer dibujo ya con el modelo puesto. La etiqueta carga de forma asíncrona: cuando termina se
+    // redibuja, y recién ahí cuenta como primer frame (RF-10.3).
+    this.#compiled.then(() => {
       if (this.#disposed) return
       this.#draw()
-      this.#firstFrameHandle = requestAnimationFrame(() => {
-        this.#firstFrameHandle = null
-        this.#firstFrameDone = true
-        const callbacks = this.#firstFrameCallbacks
-        this.#firstFrameCallbacks = []
-        callbacks.forEach((cb) => cb())
+      label.ready.then(() => {
+        if (this.#disposed) return
+        this.#draw()
+        // Dos frames, no uno: el canvas tiene que haberse compuesto al menos una vez antes de que
+        // el póster se quite, o entre uno y otro puede verse el hueco (RF-10.3).
+        this.#firstFrameHandle = requestAnimationFrame(() => {
+          this.#firstFrameHandle = requestAnimationFrame(() => {
+            this.#firstFrameHandle = null
+            this.#firstFrameDone = true
+            const callbacks = this.#firstFrameCallbacks
+            this.#firstFrameCallbacks = []
+            callbacks.forEach((cb) => cb())
+          })
+        })
       })
     })
   }

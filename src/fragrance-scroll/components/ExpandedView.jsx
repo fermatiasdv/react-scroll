@@ -10,6 +10,7 @@ import { useViewport } from '../hooks/useViewport.js'
 import { layoutFor } from '../lib/layout.js'
 import { sceneFor } from '../lib/scene.js'
 import { indexFromSlug } from '../lib/slug.js'
+import { writeLastSlug } from '../lib/storage.js'
 import Background from './Background.jsx'
 import Bottle from './Bottle.jsx'
 import CloseButton from './CloseButton.jsx'
@@ -24,7 +25,7 @@ import Panel from './Panel.jsx'
 //    termina el giro; entran el ingrediente y el panel nuevos (el panel viejo se desmonta).
 // La carga inicial (RF-07.5), en cambio, es otro camino: la botella da una vuelta completa y el
 // ingrediente, oculto hasta entonces, aparece al 80% del giro. El panel ya está en su lugar.
-export default function ExpandedView({ assets, fragrances, initialSlug, onCloseExpanded }) {
+export default function ExpandedView({ assets, fragrances, initialSlug, storage, onCloseExpanded }) {
   const viewport = useViewport()
   const navigation = useNavigation({
     initialIndex: indexFromSlug(fragrances, initialSlug),
@@ -53,6 +54,12 @@ export default function ExpandedView({ assets, fragrances, initialSlug, onCloseE
   // Una transición pisa el giro de carga (cancela el giro): el ingrediente entra por la coreografía.
   if (phase !== 'idle' && revealedKey !== introKey) setRevealedKey(introKey)
   const introPending = revealedKey !== introKey
+
+  // Última vista (RF-06.7, RF-09.1): se guarda al abrir y cada vez que cambia la fragancia actual.
+  const currentSlug = fragrance.slug
+  useEffect(() => {
+    writeLastSlug(storage, currentSlug)
+  }, [storage, currentSlug])
 
   useEffect(() => {
     const previous = previousPhase.current

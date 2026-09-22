@@ -1,33 +1,33 @@
 import { useState } from 'react'
-import { DEFAULT_ASSETS, FRAGRANCES, FragranceScroll } from '../fragrance-scroll/index.js'
+import { DEFAULT_ASSETS, FRAGRANCES, FragranceScroll, localStorageStorage } from '../fragrance-scroll/index.js'
 
-// Selector de desarrollo: `?i=0..9` elige la fragancia inicial. Un valor inválido o ausente da la primera.
-function initialSlugFromUrl() {
-  const i = Number(new URLSearchParams(window.location.search).get('i'))
-  return FRAGRANCES[i]?.slug
+// Selector de desarrollo: `?i=0..9` arranca directo en el desplegado con esa fragancia. Un valor
+// inválido o ausente arranca en el colapsado.
+function initialViewFromUrl() {
+  const i = new URLSearchParams(window.location.search).get('i')
+  const slug = i === null || i.trim() === '' ? undefined : FRAGRANCES[Number(i)]?.slug
+  return slug ? { mode: 'expanded', slug } : { mode: 'collapsed', slug: undefined }
 }
 
-// Selector de desarrollo para cambiar de fragancia sin recargar (hasta que T-4.1 traiga la navegación).
-const SELECT_STYLE = { position: 'fixed', top: '1.5rem', left: '1.5rem', zIndex: 1000, font: 'inherit' }
-
 export default function SandboxApp() {
-  const [slug, setSlug] = useState(() => initialSlugFromUrl() ?? FRAGRANCES[0].slug)
+  // AJUSTE-04: simulación de abrir y volver de la pantalla desplegada. Ver docs/ajustes.md.
+  const [view, setView] = useState(initialViewFromUrl)
+
+  // AJUSTE-04: en Tapcart será `screen/open`. Ver docs/ajustes.md.
+  const openExpanded = (slug) => setView({ mode: 'expanded', slug })
+  // AJUSTE-04: en Tapcart será `go/back`. Ver docs/ajustes.md.
+  const closeExpanded = () => setView({ mode: 'collapsed', slug: undefined })
 
   return (
-    <>
-      <select
-        aria-label="Fragancia (desarrollo)"
-        style={SELECT_STYLE}
-        value={slug}
-        onChange={(e) => setSlug(e.target.value)}
-      >
-        {FRAGRANCES.map((fragrance) => (
-          <option key={fragrance.slug} value={fragrance.slug}>
-            {fragrance.name}
-          </option>
-        ))}
-      </select>
-      <FragranceScroll assets={DEFAULT_ASSETS} fragrances={FRAGRANCES} initialSlug={slug} />
-    </>
+    <FragranceScroll
+      mode={view.mode}
+      assets={DEFAULT_ASSETS}
+      fragrances={FRAGRANCES}
+      initialSlug={view.slug}
+      // AJUSTE-11: la última vista se guarda en localStorage. Ver docs/ajustes.md.
+      storage={localStorageStorage}
+      onOpenExpanded={openExpanded}
+      onCloseExpanded={closeExpanded}
+    />
   )
 }

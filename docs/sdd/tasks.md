@@ -27,7 +27,8 @@
 | T-4.2 | Coreografía de la transición | T-3.2, T-4.1 | hecha |
 | T-4.3 | Giro de carga inicial | T-4.2 | hecha |
 | T-4.4 | Prueba en Android de gama media | T-4.3 | pendiente |
-| T-5.1 | Modo colapsado + abrir/cerrar simulados + última vista | T-3.3, T-4.2 | pendiente |
+| T-5.1 | Modo colapsado + abrir/cerrar simulados + última vista | T-3.3, T-4.2 | en verificación |
+| T-5.1-fix | Salto entre póster y botella 3D al abrir el desplegado | T-5.1 | en verificación |
 | T-5.2 | Precarga | T-5.1 | pendiente |
 | T-5.3 | Sandbox: secciones de relleno | T-5.1 | pendiente |
 | T-6.1 | Auditoría final contra la spec | todas | pendiente |
@@ -273,14 +274,27 @@
 
 ### T-5.1: Modo colapsado + abrir/cerrar simulados + última vista
 
-- **Estado:** pendiente
+- **Estado:** en verificación
 - **Cubre:** RF-06.7, RF-08, RF-09, RF-12.1, RF-13.2, AJUSTE-04
-- **Archivos permitidos:** `src/fragrance-scroll/components/{CollapsedView,ShowButton}.jsx`, `src/fragrance-scroll/FragranceScroll.jsx`, `src/fragrance-scroll/components/ExpandedView.jsx`, `src/fragrance-scroll/lib/storage.js`, `src/sandbox/SandboxApp.jsx`, `tests/unit/storage.test.js`, `tests/ssr/render.test.jsx`.
+- **Archivos permitidos:** `src/fragrance-scroll/components/{CollapsedView,ShowButton}.jsx`, `src/fragrance-scroll/FragranceScroll.jsx`, `src/fragrance-scroll/index.js` (sólo para exportar `localStorageStorage`), `src/fragrance-scroll/components/ExpandedView.jsx`, `src/fragrance-scroll/lib/storage.js`, `src/sandbox/SandboxApp.jsx`, `tests/unit/storage.test.js`, `tests/ssr/render.test.jsx`.
 - **Aceptación:**
   - el colapsado no importa three (se verifica en la pestaña Network: no se pide three ni el GLB antes de la precarga);
   - abrir y cerrar funcionan;
   - al volver se ve la última fragancia vista, también después de recargar;
   - hay un test SSR del colapsado;
+  - VE.
+
+### T-5.1-fix: Salto entre el póster y la botella 3D al abrir el desplegado
+
+- **Estado:** en verificación
+- **Cubre:** RF-10.3 (el reemplazo del póster por el canvas es sin parpadeo), RF-03.5, RNF-03
+- **Archivos permitidos:** `src/fragrance-scroll/hooks/useViewport.js`, `src/fragrance-scroll/three/BottleRig.js`.
+- **Contexto:** al tocar "Show fragrances" pasan ~250 a 290 ms hasta que arranca el giro, con un bloqueo del hilo principal de ~150 ms (PMREM + compilación de shaders). Además, el colapsado puede quedar calculado con un ancho distinto al del desplegado (media barra de scroll ≈ 7,5 px).
+- **Aceptación:**
+  - el `longtask` de la primera apertura baja de forma medible respecto de los ~145 a 166 ms de hoy;
+  - el póster no se quita hasta que el canvas ya se compuso al menos un frame;
+  - el póster y el título no se corren al pasar del colapsado al desplegado;
+  - **el usuario confirma visualmente** que el salto desapareció o que mejoró, y en ese caso se registra qué queda;
   - VE.
 
 ### T-5.2: Precarga
