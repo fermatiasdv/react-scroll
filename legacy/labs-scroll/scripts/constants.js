@@ -34,7 +34,6 @@ export const Saffron = [
   `${INGREDIENTS_PATH}Saffron1.png`,
   `${INGREDIENTS_PATH}Saffron2.png`,
 ];
-export const PinkPepper = [];
 export const Caramel = [
   `${INGREDIENTS_PATH}Caramel.png`,
   `${INGREDIENTS_PATH}Caramel1.png`,
@@ -62,7 +61,7 @@ export const Almond = [
   `${INGREDIENTS_PATH}Almond1.png`,
   `${INGREDIENTS_PATH}Almond2.png`,
 ];
-export const Dates = [];
+
 export const Lilac = [
   `${INGREDIENTS_PATH}Lilac.png`,
   `${INGREDIENTS_PATH}Lilac1.png`,
@@ -98,7 +97,6 @@ export const Jasmine = [
   `${INGREDIENTS_PATH}Jasmine1.png`,
   `${INGREDIENTS_PATH}Jasmine2.png`,
 ];
-export const YangLang = [];
 export const Vanilla = [
   `${INGREDIENTS_PATH}Vanilla.png`,
   `${INGREDIENTS_PATH}Vanilla1.png`,
@@ -119,19 +117,33 @@ export const BulgarianRose = [
   `${INGREDIENTS_PATH}BulgarianRose1.png`,
   `${INGREDIENTS_PATH}BulgarianRose2.png`,
 ];
+export const PinkPepper = [
+  `${INGREDIENTS_PATH}pinkPepper1.webp`,
+  `${INGREDIENTS_PATH}pinkPepper2.webp`,
+  `${INGREDIENTS_PATH}pinkPepper3.webp`,
+];
+export const YangLang = [
+  `${INGREDIENTS_PATH}ylangYlang1.webp`,
+  `${INGREDIENTS_PATH}ylangYlang2.webp`,
+  `${INGREDIENTS_PATH}ylangYlang3.webp`,
+];
+export const Dates = [
+  `${INGREDIENTS_PATH}dates1.webp`,
+  `${INGREDIENTS_PATH}dates2.webp`,
+  `${INGREDIENTS_PATH}dates3.webp`,
+];
 
 // ---------------------------------------------------------------------------
 // Fragancias: producto + sus ingredientes
 // ---------------------------------------------------------------------------
 
-export const FraganciaRebellious = {
+export const FraganciaRebellious = { // ESTA
   idx: 1,
   nombre: 'Rebellious',
   fragancia: Rebellious,
   ingredientes: [
     { nombre: 'Saffron', imagenes: Saffron },
-    // { nombre: 'Pink Pepper', imagenes: PinkPepper }, // falta imagen
-    { nombre: 'Bergamot', imagenes: Bergamot }, // Quitar este
+    { nombre: 'Pink Pepper', imagenes: PinkPepper },
     { nombre: 'Caramel', imagenes: Caramel },
   ],
 };
@@ -145,14 +157,13 @@ export const FraganciaForbiddenFlower = {
     { nombre: 'Freesia', imagenes: Freesia },
   ],
 };
-export const FraganciaWonderOfTheWorld = {
+export const FraganciaWonderOfTheWorld = { // ESTA
   idx: 3,
   nombre: 'Wonder of the World',
   fragancia: WonderOfTheWorld,
   ingredientes: [
     { nombre: 'Almond', imagenes: Almond },
-    //    { nombre: 'Dates', imagenes: Dates }, // falta imagen
-    { nombre: 'Freesia', imagenes: Freesia }, // sacar esta
+    { nombre: 'Dates', imagenes: Dates },
     { nombre: 'Caramel', imagenes: Caramel },
   ],
 };
@@ -166,13 +177,12 @@ export const FraganciaPainkiller = {
     { nombre: 'Musk', imagenes: Musk },
   ],
 };
-export const FraganciaJaggedEdge = {
+export const FraganciaJaggedEdge = { //ESTA
   idx: 5,
   nombre: 'Jagged Edge',
   fragancia: JaggedEdge,
   ingredientes: [
-    // { nombre: 'Pink Pepper', imagenes: PinkPepper }, // falta imagen
-    { nombre: 'Bergamot', imagenes: Bergamot }, // Quitar este
+    { nombre: 'Pink Pepper', imagenes: PinkPepper },
     { nombre: 'Tonka Bean', imagenes: TonkaBean },
     { nombre: 'Rose', imagenes: Rose },
   ],
@@ -187,13 +197,12 @@ export const FraganciaCrimsonDesert = {
     { nombre: 'Jasmine', imagenes: Jasmine },
   ],
 };
-export const FraganciaGlitterati = {
+export const FraganciaGlitterati = { // ESTA
   idx: 7,
   nombre: 'Glitterati',
   fragancia: Glitterati,
   ingredientes: [
-    // { nombre: 'Yang Lang', imagenes: YangLang }, // falta imagen
-    { nombre: 'Jasmine', imagenes: Jasmine }, // Quitar este
+    { nombre: 'Yang Lang', imagenes: YangLang },
     { nombre: 'Vanilla', imagenes: Vanilla },
     { nombre: 'Musk', imagenes: Musk },
   ],
