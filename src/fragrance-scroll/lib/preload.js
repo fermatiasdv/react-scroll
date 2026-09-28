@@ -62,7 +62,10 @@ export function schedulePreload(assets) {
       .catch(() => {})
       .then(() => {
         assets.backgrounds.forEach((url) => preloadImage(url, 'low'))
-        Object.values(assets.ingredients).forEach((url) => preloadImage(url, 'low'))
+        // RF-02.4: 3 variantes por fragancia.
+        Object.values(assets.ingredients)
+          .flat()
+          .forEach((url) => preloadImage(url, 'low'))
       })
       .catch(() => {})
   })

@@ -29,13 +29,16 @@
   background-size: cover;
 }
 
-/* L:section: .fragrance-scroll-stage (la pantalla del modo desplegado) */
+/* L:section: .fragrance-scroll-stage (la pantalla del modo desplegado). `pointer-events: auto` NO es
+ * literal del legacy (que lo tenía en `none`): hace falta para RF-07.6, que no existe en el legacy.
+ * Las capas internas (`.fs-bg-layer`, `.fs-overlay`, `.fs-content`) siguen en `none`, así que el click
+ * las atraviesa y llega acá salvo sobre la botella y ✕, que tienen su propio `pointer-events: auto`. */
 .fs-stage {
   position: fixed;
   inset: 0;
   overflow: hidden;
   isolation: isolate;
-  pointer-events: none;
+  pointer-events: auto;
   font-family: 'Cormorant Garamond', serif;
 }
 

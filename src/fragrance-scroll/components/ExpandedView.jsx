@@ -7,6 +7,7 @@ import {
 } from '../config/timing.js'
 import { useNavigation } from '../hooks/useNavigation.js'
 import { useViewport } from '../hooks/useViewport.js'
+import { pickIngredientVariant } from '../lib/ingredientVariant.js'
 import { layoutFor } from '../lib/layout.js'
 import { sceneFor } from '../lib/scene.js'
 import { indexFromSlug } from '../lib/slug.js'
@@ -25,6 +26,13 @@ import Panel from './Panel.jsx'
 //    termina el giro; entran el ingrediente y el panel nuevos (el panel viejo se desmonta).
 // La carga inicial (RF-07.5), en cambio, es otro camino: la botella da una vuelta completa y el
 // ingrediente, oculto hasta entonces, aparece al 80% del giro. El panel ya está en su lugar.
+
+// RF-07.6: un click/tap en `.fs-stage` fuera de la botella y de ✕ repite ese giro de carga. Excluye
+// esos dos elementos, que ya tienen su propia acción (abrir el link, cerrar).
+export function isReplayExcluded(target) {
+  return Boolean(target?.closest?.('.fs-image-product, .fs-close-button'))
+}
+
 export default function ExpandedView({ assets, fragrances, initialSlug, storage, onCloseExpanded }) {
   const viewport = useViewport()
   const navigation = useNavigation({
@@ -47,6 +55,18 @@ export default function ExpandedView({ assets, fragrances, initialSlug, storage,
   const [introKey, setIntroKey] = useState(0)
   const [revealedKey, setRevealedKey] = useState(-1)
   const [measured, setMeasured] = useState(null)
+  // RF-02.4: variante de ingrediente elegida al azar entre las 3 de la fragancia actual. Se sortea
+  // de nuevo cada vez que el ingrediente pasa a visible: al revelarse el giro de carga (más abajo,
+  // en `revealIntro`) y al entrar en una transición (más abajo, `enteredIndex` contra `index`).
+  const [ingredientSrc, setIngredientSrc] = useState(() => pickIngredientVariant(assets.ingredients[fragrance.slug]))
+  const [enteredIndex, setEnteredIndex] = useState(index)
+
+  // Envuelve `setRevealedKey`: además de marcar el giro de carga como revelado (RF-07.5, RF-07.6),
+  // sortea la variante de ingrediente que va a aparecer.
+  function revealIntro(key) {
+    setRevealedKey(key)
+    setIngredientSrc(pickIngredientVariant(assets.ingredients[fragrance.slug]))
+  }
   if (viewport && (!measured || measured.width !== viewport.width || measured.height !== viewport.height)) {
     setMeasured(viewport)
     if (measured) setIntroKey(introKey + 1)
@@ -54,6 +74,22 @@ export default function ExpandedView({ assets, fragrances, initialSlug, storage,
   // Una transición pisa el giro de carga (cancela el giro): el ingrediente entra por la coreografía.
   if (phase !== 'idle' && revealedKey !== introKey) setRevealedKey(introKey)
   const introPending = revealedKey !== introKey
+  // RF-02.4: la entrada de una transición (RF-07.2) también sortea una variante nueva, para la
+  // fragancia entrante. `enteredIndex` evita repetir el sorteo en cada render de la misma entrada.
+  if (phase === 'entering' && enteredIndex !== index) {
+    setEnteredIndex(index)
+    setIngredientSrc(pickIngredientVariant(assets.ingredients[fragrance.slug]))
+  }
+
+  // RF-07.6: se ignora fuera de `idle` (hay una transición en curso, RF-07.1 a RF-07.3) o si el
+  // giro de carga ya está en marcha (automático o repetido); `Bottle.spinIntro()` además no hace
+  // nada si el rig todavía no existe.
+  function handleStageClick(e) {
+    if (isReplayExcluded(e.target)) return
+    if (phase !== 'idle') return
+    if (bottleRef.current?.isSpinIntroBusy()) return
+    bottleRef.current?.spinIntro()
+  }
 
   // Última vista (RF-06.7, RF-09.1): se guarda al abrir y cada vez que cambia la fragancia actual.
   const currentSlug = fragrance.slug
@@ -89,7 +125,7 @@ export default function ExpandedView({ assets, fragrances, initialSlug, storage,
     items = (
       <>
         <IngredientImage
-          src={assets.ingredients[fragrance.slug]}
+          src={ingredientSrc}
           x={scene.ingredient.x}
           y={scene.ingredient.y}
           height={scene.ingredient.height}
@@ -106,7 +142,7 @@ export default function ExpandedView({ assets, fragrances, initialSlug, storage,
         <Bottle
           ref={bottleRef}
           introKey={introKey}
-          onIntroReveal={setRevealedKey}
+          onIntroReveal={revealIntro}
           x={scene.product.x}
           y={scene.product.y}
           size={scene.product.size}
@@ -121,7 +157,7 @@ export default function ExpandedView({ assets, fragrances, initialSlug, storage,
   }
 
   return (
-    <div className="fs-stage" style={style}>
+    <div className="fs-stage" style={style} onClick={handleStageClick}>
       <Background src={assets.backgrounds[backgroundIndex % assets.backgrounds.length]} />
       <div className="fs-overlay" aria-hidden="true" />
       <div className="fs-content" aria-hidden="true">

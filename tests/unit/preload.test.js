@@ -74,7 +74,7 @@ describe('schedulePreload (RF-11)', () => {
 
     const labelUrls = Object.values(DEFAULT_ASSETS.labels)
     const backgroundUrls = DEFAULT_ASSETS.backgrounds
-    const ingredientUrls = Object.values(DEFAULT_ASSETS.ingredients)
+    const ingredientUrls = Object.values(DEFAULT_ASSETS.ingredients).flat()
     expect(created).toHaveLength(labelUrls.length + backgroundUrls.length + ingredientUrls.length)
 
     labelUrls.forEach((url) => {

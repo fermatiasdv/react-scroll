@@ -42,9 +42,12 @@ describe('FRAGRANCES', () => {
 })
 
 describe('DEFAULT_ASSETS', () => {
-  it('cada slug tiene imagen de ingrediente y etiqueta (Painkiller cae en default)', () => {
+  it('cada slug tiene 3 variantes de imagen de ingrediente y una etiqueta (Painkiller cae en default)', () => {
     for (const { slug } of FRAGRANCES) {
-      expect(DEFAULT_ASSETS.ingredients[slug]).toBeTypeOf('string')
+      const variants = DEFAULT_ASSETS.ingredients[slug]
+      expect(variants).toHaveLength(3)
+      expect(new Set(variants).size).toBe(3)
+      variants.forEach((url) => expect(url).toBeTypeOf('string'))
       const label = DEFAULT_ASSETS.labels[slug] ?? DEFAULT_ASSETS.labels.default
       expect(label).toBeTypeOf('string')
     }
@@ -68,7 +71,7 @@ describe('DEFAULT_ASSETS', () => {
       DEFAULT_ASSETS.model,
       ...Object.values(DEFAULT_ASSETS.labels),
       ...DEFAULT_ASSETS.backgrounds,
-      ...Object.values(DEFAULT_ASSETS.ingredients),
+      ...Object.values(DEFAULT_ASSETS.ingredients).flat(),
       ...Object.values(DEFAULT_ASSETS.posters),
     ]
     expect(urls.length).toBeGreaterThan(0)

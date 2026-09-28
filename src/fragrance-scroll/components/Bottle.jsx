@@ -28,7 +28,8 @@ const POSTER_LAYER = { position: 'absolute', inset: 0 }
 //
 // Carga inicial (RF-07.5): apenas el canvas pinta su primer frame, y cada vez que cambia `introKey`
 // (el rearmado por resize), da una vuelta completa de frente a frente. Al 80% del giro llama a
-// `onIntroReveal(introKey)`, que es cuando aparece el ingrediente.
+// `onIntroReveal(introKey)`, que es cuando aparece el ingrediente. El mismo giro se puede repetir a
+// pedido (RF-07.6, `spinIntro()`), ignorando el pedido si ya hay uno en curso (`isSpinIntroBusy()`).
 const Bottle = forwardRef(function Bottle(
   { x, y, size, slug, name, modelUrl, labelUrl, posterSrc, introKey, onIntroReveal },
   ref,
@@ -37,9 +38,22 @@ const Bottle = forwardRef(function Bottle(
   const rigRef = useRef(null)
   const latest = useRef({ labelUrl, size, introKey })
   const onIntroRevealRef = useRef(onIntroReveal)
+  const spinIntroBusyRef = useRef(false)
   // Modelo para el que el canvas ya pintó su primer frame; si cambia el modelo, vuelve el póster.
   const [readyModelUrl, setReadyModelUrl] = useState(null)
   const ready = readyModelUrl === modelUrl
+
+  // Giro de carga (RF-07.5/RF-07.6): defaults del rig, o sea una vuelta de SPIN_DURATION_MS con
+  // easeInOutCubic y `onReveal` al SPIN_REVEAL_FRACTION. Un pedido mientras ya hay uno en curso se
+  // ignora, tanto si lo dispara el efecto de más abajo como un `spinIntro()` por `ref`.
+  function runSpinIntro() {
+    const rig = rigRef.current
+    if (!rig || spinIntroBusyRef.current) return
+    spinIntroBusyRef.current = true
+    rig.spin({ onReveal: () => onIntroRevealRef.current?.(latest.current.introKey) }).finally(() => {
+      spinIntroBusyRef.current = false
+    })
+  }
 
   useImperativeHandle(ref, () => ({
     // t = 0: de frente a espaldas.
@@ -58,6 +72,14 @@ const Bottle = forwardRef(function Bottle(
     // Transición cancelada (RF-07.4): corta el giro y deja la botella de frente.
     cancelSpin() {
       rigRef.current?.setYaw(0)
+    },
+    // Repite el giro de carga a pedido (RF-07.6). Quien llama chequea antes `isSpinIntroBusy()` y la
+    // fase de navegación; acá sólo se ignora si no hay rig o ya hay un giro de carga en marcha.
+    spinIntro() {
+      runSpinIntro()
+    },
+    isSpinIntroBusy() {
+      return spinIntroBusyRef.current
     },
   }), [])
 
@@ -125,11 +147,10 @@ const Bottle = forwardRef(function Bottle(
     rigRef.current?.setLabel(labelUrl)
   }, [labelUrl])
 
-  // Giro de carga (RF-07.5): defaults del rig, o sea una vuelta de SPIN_DURATION_MS con easeInOutCubic
-  // y `onReveal` al SPIN_REVEAL_FRACTION. Una transición lo cancela con `spinOut`.
+  // Dispara el giro de carga automático (RF-07.5). Una transición lo cancela con `spinOut`.
   useEffect(() => {
     if (!ready) return
-    rigRef.current?.spin({ onReveal: () => onIntroRevealRef.current?.(introKey) })
+    runSpinIntro()
   }, [ready, introKey])
 
   useEffect(() => {

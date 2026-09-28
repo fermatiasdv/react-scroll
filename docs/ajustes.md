@@ -59,11 +59,11 @@ La mayoría de los ajustes se aplican en alguno de estos momentos:
 
 ### AJUSTE-06 — Assets servidos localmente
 
-- **Qué es:** el modelo GLB, las etiquetas, los fondos y las imágenes de ingredientes se sirven desde el sandbox, en `public/fragrance-scroll/` (4,8 MB en total):
+- **Qué es:** el modelo GLB, las etiquetas, los fondos y las imágenes de ingredientes se sirven desde el sandbox, en `public/fragrance-scroll/`:
   - `model/bottle.glb` (2 MB)
   - `labels/<slug>.webp` (10 etiquetas, ya convertidas a WebP, ver AJUSTE-10)
   - `backgrounds/bg-1.jpg`, `bg-2..4.webp`
-  - `ingredients/<slug>.webp` (10 imágenes fijas de ingrediente)
+  - `ingredients/<slug>-<n>.webp` (10 fragancias × 3 variantes = 30 imágenes, RF-02.4)
   - `posters/<slug>.webp` (se agregan cuando se generen, ver AJUSTE-11)
 - **Legacy:** en el tema salían del CDN de Shopify vía `asset_url`, inyectados como JSON en `sections/fragrance-scroll.liquid`.
 - **Por qué quedó:** los assets todavía no están subidos a Shopify Files.

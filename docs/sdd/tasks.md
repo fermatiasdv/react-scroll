@@ -26,16 +26,18 @@
 | T-4.1 | `useNavigation`: swipe, rueda, teclado y timers | T-1.4, T-2.2 | hecha |
 | T-4.2 | Coreografía de la transición | T-3.2, T-4.1 | hecha |
 | T-4.3 | Giro de carga inicial | T-4.2 | hecha |
-| T-4.3-fix | Igualar la velocidad del giro de carga inicial a la de la transición | T-4.3 | pendiente |
+| T-4.3-fix | Igualar la velocidad del giro de carga inicial a la de la transición | T-4.3 | en verificación |
 | T-4.4 | Prueba en Android de gama media | T-4.3 | hecha |
 | T-4.4-fix | Diagnóstico de rendimiento en Android de gama media | T-4.4 | hecha |
 | T-4.4-fix2 | Techo de pixelRatio en BottleRig | T-4.4-fix | hecha |
+| T-4.5 | Repetir el giro de carga al tocar la pantalla | T-4.1, T-4.3-fix | pendiente |
 | T-5.1 | Modo colapsado + abrir/cerrar simulados + última vista | T-3.3, T-4.2 | hecha |
 | T-5.1-fix | Salto entre póster y botella 3D al abrir el desplegado | T-5.1 | hecha |
 | T-5.1-fix2 | Bloqueo del hilo principal al abrir el desplegado | T-5.1-fix | bloqueada (sin mejora medible) |
 | T-5.2 | Precarga | T-5.1 | hecha |
 | T-5.3 | Sandbox: secciones de relleno | T-5.1 | hecha |
 | T-5.4 | Sandbox: quitar las secciones de relleno | T-5.3 | hecha |
+| T-5.5 | Variantes aleatorias de imagen de ingredientes | T-1.1, T-4.2 | hecha |
 | T-6.1 | Auditoría final contra la spec | todas | hecha |
 | T-7.x | Empaquetado en Tapcart | T1 de `ajustes.md` | bloqueada (sin acceso a Tapcart) |
 
@@ -269,13 +271,27 @@
 
 ### T-4.3-fix: Igualar la velocidad del giro de carga inicial a la de la transición
 
-- **Estado:** pendiente
+- **Estado:** en verificación
 - **Depende de:** T-4.3
 - **Cubre:** RF-07.5 (modificado)
 - **Archivos permitidos:** `src/fragrance-scroll/config/timing.js`.
 - **Pasos:** cambiar `SPIN_DURATION_MS` de `2000` a `1000`.
 - **Aceptación:**
-  - **el usuario confirma visualmente** que el giro inicial gira a la misma velocidad que los giros de transición (una vuelta completa en 1000 ms) y que el ingrediente aparece al 80% (800 ms);
+  - **el usuario confirma visualmente** que el giro inicial gira a la misma velocidad que los giros de transición (una vuelta completa en 1000 ms) y que el ingrediente aparece al 80% (800 ms): ✅ (usuario: "funciona OK");
+  - VE: sin `console.log` en `src/`/`tools/` ✅; `npm run test`, `npm run lint`, `npm run build` y `git status --porcelain` (archivos ⊆ permitidos) pendientes — el entorno de shell no respondió al intentar correrlos.
+
+### T-4.5: Repetir el giro de carga al tocar la pantalla
+
+- **Estado:** pendiente
+- **Depende de:** T-4.1, T-4.3-fix
+- **Cubre:** RF-07.6, design §4.11
+- **Archivos permitidos:** `src/fragrance-scroll/components/ExpandedView.jsx`, `src/fragrance-scroll/components/Bottle.jsx`, `src/fragrance-scroll/styles/fragrance-scroll.css`, `tests/unit/expandedView.test.js` (nuevo, sólo si se extrae lógica pura testeable, p. ej. qué target del click queda excluido).
+- **Aceptación:**
+  - **el usuario confirma visualmente:** tocar cualquier parte de la pantalla desplegada, fuera de la botella y de ✕, repite el giro completo con el ingrediente reapareciendo al 80%, sin cambiar de fragancia ni cerrar;
+  - tocar la botella sigue abriendo su link (RF-05.6) y no dispara un giro extra;
+  - tocar ✕ sigue cerrando y no dispara un giro extra;
+  - tocar durante una transición (RF-07.1 a RF-07.3) no hace nada;
+  - tocar mientras el giro de carga ya está en curso no lo reinicia ni superpone otro;
   - VE.
 
 ### T-4.4: Prueba en Android de gama media
@@ -406,6 +422,34 @@
   - **el usuario confirma visualmente** que, en la primera fragancia, un swipe/rueda hacia arriba (o ✕) cierra el desplegado (desaparece la ✕, se ve el póster y "Show fragrances"), y que lo mismo pasa hacia abajo en la última fragancia — sin páginas fake de por medio;
   - VE.
 - **Resultado:** verificado con el navegador: el sandbox muestra sólo el bloque, sin scroll ni secciones antes/después; 220 tests, lint y build en verde; archivos tocados = archivos permitidos. El usuario probó con swipe real en ambos bordes (primera y última fragancia) y confirmó que cierra bien.
+
+### T-5.5: Variantes aleatorias de imagen de ingredientes
+
+- **Estado:** hecha
+- **Depende de:** T-1.1, T-4.2
+- **Cubre:** RF-02.4 (modificado)
+- **Archivos permitidos:**
+  - `src/fragrance-scroll/config/assets.js`
+  - `src/fragrance-scroll/components/ExpandedView.jsx`
+  - `src/fragrance-scroll/lib/ingredientVariant.js` (nuevo)
+  - `tests/unit/ingredientVariant.test.js` (nuevo)
+  - `tests/unit/data.test.js`
+  - `public/fragrance-scroll/ingredients/*.webp`
+  - `src/fragrance-scroll/lib/preload.js`
+  - `tests/unit/preload.test.js`
+- **Pasos:**
+  1. Copiar los 30 archivos de `legacy/labs-scroll/assets/ingredients/recortadas/variantes/` a `public/fragrance-scroll/ingredients/`, renombrados a `<slug-sin-guiones>-<n>.webp` (n = 1..3, mismo orden que `<Fragancia>Ingredients<n>.webp`). Borrar las 10 imágenes únicas anteriores.
+  2. `assets.js`: `ingredients[slug]` pasa a ser un array de 3 URLs.
+  3. Función pura `pickIngredientVariant(variants)` que elige un elemento al azar.
+  4. `ExpandedView.jsx`: recalcular la variante cada vez que el ingrediente pasa a visible (RF-07.2, RF-07.5, RF-07.6), guardada en estado mientras está visible/oculta.
+  5. Actualizar `tests/unit/data.test.js`: cada fragancia tiene 3 variantes y los 30 archivos existen en `public/`.
+  6. `preload.js`: aplanar las 3 variantes por fragancia antes de precargarlas (`Object.values(assets.ingredients).flat().forEach(...)`), así se siguen precargando las 30 imágenes, no sólo la primera de cada una.
+  7. Actualizar `tests/unit/preload.test.js` donde arma `ingredientUrls` a partir de `DEFAULT_ASSETS.ingredients`, para que siga comparando contra las URLs reales (ahora 30, no 10).
+- **Aceptación:**
+  - test: 10 fragancias × 3 variantes en `assets.ingredients`, los 30 archivos existen (fs);
+  - **el usuario confirma visualmente** que, repitiendo el giro varias veces en una misma fragancia, aparecen las 3 variantes, sin mezclar ingredientes de otra fragancia;
+  - VE.
+- **Resultado:** 226 tests (agrega 8: 2 de `ingredientVariant.test.js`, los demás por las 3 variantes en `data.test.js`/`preload.test.js`), lint y build en verde; `git status --porcelain` sólo tocó archivos permitidos de T-5.5 (más lo ya modificado antes de empezar: `Bottle.jsx`, `fragrance-scroll.css`, `tests/unit/expandedView.test.js`, que no son de esta tarea); sin `console.log` en `src/`/`tools/`. El usuario confirmó visualmente que anda bien ("quedo OK").
 
 ## Fase 6: cierre
 
