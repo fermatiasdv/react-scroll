@@ -51,7 +51,7 @@ El desarrollo se hace primero en un **sandbox Vite** (este proyecto) y después 
 - **RF-02.1** Todas las URLs de assets (modelo, etiquetas, fondos, imágenes de ingrediente, pósters) salen de **un único objeto de configuración**. Ningún otro módulo arma ni contiene URLs de assets (AJUSTE-06).
 - **RF-02.2** Las etiquetas se usan en WebP (`public/fragrance-scroll/labels/<slug-sin-guiones>.webp`, ver AJUSTE-10). Painkiller usa `default.webp`, igual que en el legacy.
 - **RF-02.3** Los fondos son 4 y se asignan de forma cíclica por posición: la fragancia `i` usa el fondo `i % 4`, en el orden `bg-1.jpg`, `bg-2.webp`, `bg-3.webp`, `bg-4.webp` (`L:scroll-content.js`, `buildContent`).
-- **RF-02.4** Cada fragancia tiene 3 variantes de imagen de ingrediente (`ingredients/<slug-sin-guiones>-<n>.webp`, `n` de 1 a 3). Cada vez que la imagen de ingrediente pasa de oculta a visible —el giro de carga inicial (RF-07.5), su repetición (RF-07.6) y la entrada en una transición (RF-07.2)— se sortea al azar una de las 3, de forma independiente de la elegida la vez anterior (puede repetirse). Painkiller además lleva el estiramiento `{ scaleX: 2, scaleY: 1.2 }` en sus 3 variantes (`L:scroll-content.js`, `FIXED_INGREDIENT_IMAGE_OVERRIDES`).
+- **RF-02.4** Cada fragancia tiene 3 variantes de imagen de ingrediente (`ingredients/<slug-sin-guiones>-<n>.webp`, `n` de 1 a 3). Cada vez que la imagen de ingrediente pasa de oculta a visible —el giro de carga inicial (RF-07.5) y la entrada en una transición (RF-07.2)— se sortea al azar una de las 3, de forma independiente de la elegida la vez anterior (puede repetirse). Painkiller además lleva el estiramiento `{ scaleX: 2, scaleY: 1.2 }` en sus 3 variantes (`L:scroll-content.js`, `FIXED_INGREDIENT_IMAGE_OVERRIDES`).
 
 ### RF-03: Layout y geometría
 
@@ -127,7 +127,7 @@ Al pasar de la fragancia A a la B (`L:scroll-motor.js`, `goToIndex`; `L:scroll-s
 - **RF-07.3** **En t = 550 ms** se libera el bloqueo (RF-06.4) y se procesa la salida encolada, si la hay (RF-06.5).
 - **RF-07.4** Si el modo desplegado se cierra durante una transición, la transición se cancela sin efectos colaterales: no quedan timers ni animaciones vivas.
 - **RF-07.5** **Carga inicial** del modo desplegado (y rearmado por resize): la botella hace un giro completo de frente a frente en `SPIN_DURATION_MS = 1000` con `easeInOutCubic` — la misma velocidad angular que los medios giros de RF-07.1/RF-07.2 (500 ms cada uno). La imagen de ingrediente aparece al 80% del giro (`SPIN_REVEAL_FRACTION = 0.8`, o sea a los 800 ms). El panel aparece según RF-04.3. Este camino es **distinto** del de RF-07.1 a RF-07.3, igual que en el legacy (`setDisplayInstant`); a diferencia del legacy, esta duración **no** es literal (el legacy usa 2000 ms) — es un pedido posterior del usuario para unificar la velocidad de giro.
-- **RF-07.6** Tocar o hacer clic en cualquier punto de la pantalla actual, **fuera** de la botella (RF-05.6) y del botón ✕ (RF-06.6), repite el giro de carga inicial (RF-07.5): la botella vuelve a dar la vuelta completa de frente a frente con el ingrediente reapareciendo al 80% del giro. No cambia de fragancia ni cierra el modo desplegado. El toque se ignora si hay una transición en curso (RF-07.1 a RF-07.3) o si un giro de carga (el automático o uno repetido) todavía está en marcha.
+- **RF-07.6** En el modo desplegado, tocar o hacer clic en cualquier punto de la pantalla que **no** sea la botella (RF-05.6) ni el botón ✕ (RF-06.6) **no hace nada**.
 
 ### RF-08: Modo colapsado (bloque en la home)
 
@@ -139,7 +139,7 @@ Al pasar de la fragancia A a la B (`L:scroll-motor.js`, `goToIndex`; `L:scroll-s
   **No** muestra la imagen de ingrediente ni la fila de ingredientes. Todo aparece ya en su estado final, **sin animaciones** (`L:scroll-styles.js`, `renderCollapsedEntry`).
 - **RF-08.2** La fragancia mostrada es la **última vista** (RF-09). Si no hay ninguna, es la primera.
 - **RF-08.3** El botón **"Show fragrances →"** va abajo al centro, con los estilos del legacy (`L:section`, `.fragrances-overlay` y `.fragrances-show-button`). El texto es configurable y por defecto dice `Show fragrances`.
-- **RF-08.4** Tocar el botón **abre el modo desplegado** en la fragancia mostrada (`openExpanded`). En el sandbox, la apertura se simula dentro de la misma página (AJUSTE-04); en Tapcart será `screen/open`.
+- **RF-08.4** Tocar cualquier punto de la pantalla colapsada **abre el modo desplegado** (`openExpanded`) en la fragancia mostrada. El botón **"Show fragrances →"** (RF-08.3) es uno de esos puntos; no hace falta acertarle a él en particular. En el sandbox, la apertura se simula dentro de la misma página (AJUSTE-04); en Tapcart será `screen/open`.
 - **RF-08.5** Cerrar el modo desplegado (✕ o borde) vuelve al colapsado, que muestra la última fragancia vista (`closeExpanded`; en Tapcart será `go/back`).
 - **RF-08.6** El modo colapsado **no carga three.js ni crea contextos WebGL**.
 

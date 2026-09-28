@@ -66,7 +66,11 @@ export default function CollapsedView({ assets, fragrances, storage, showLabel, 
   }
 
   return (
-    <section className="fs-root" style={style}>
+    <section
+      className="fs-root"
+      style={style}
+      onClick={() => onOpenExpanded?.(fragrance.slug)}
+    >
       <div
         className="fs-container"
         style={{ backgroundImage: `url("${assets.backgrounds[index % assets.backgrounds.length]}")` }}
@@ -76,7 +80,7 @@ export default function CollapsedView({ assets, fragrances, storage, showLabel, 
         {items}
       </div>
       <div className="fs-show-overlay">
-        <ShowButton label={showLabel} onClick={() => onOpenExpanded?.(fragrance.slug)} />
+        <ShowButton label={showLabel} />
       </div>
     </section>
   )

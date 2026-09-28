@@ -17,6 +17,7 @@
   overflow: clip;
   isolation: isolate;
   font-family: 'Cormorant Garamond', serif;
+  cursor: pointer;
 }
 
 /* L:section: .fragrance-scroll__container */

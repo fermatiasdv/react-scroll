@@ -27,12 +27,6 @@ import Panel from './Panel.jsx'
 // La carga inicial (RF-07.5), en cambio, es otro camino: la botella da una vuelta completa y el
 // ingrediente, oculto hasta entonces, aparece al 80% del giro. El panel ya está en su lugar.
 
-// RF-07.6: un click/tap en `.fs-stage` fuera de la botella y de ✕ repite ese giro de carga. Excluye
-// esos dos elementos, que ya tienen su propia acción (abrir el link, cerrar).
-export function isReplayExcluded(target) {
-  return Boolean(target?.closest?.('.fs-image-product, .fs-close-button'))
-}
-
 export default function ExpandedView({ assets, fragrances, initialSlug, storage, onCloseExpanded }) {
   const viewport = useViewport()
   const navigation = useNavigation({
@@ -61,7 +55,7 @@ export default function ExpandedView({ assets, fragrances, initialSlug, storage,
   const [ingredientSrc, setIngredientSrc] = useState(() => pickIngredientVariant(assets.ingredients[fragrance.slug]))
   const [enteredIndex, setEnteredIndex] = useState(index)
 
-  // Envuelve `setRevealedKey`: además de marcar el giro de carga como revelado (RF-07.5, RF-07.6),
+  // Envuelve `setRevealedKey`: además de marcar el giro de carga como revelado (RF-07.5),
   // sortea la variante de ingrediente que va a aparecer.
   function revealIntro(key) {
     setRevealedKey(key)
@@ -79,16 +73,6 @@ export default function ExpandedView({ assets, fragrances, initialSlug, storage,
   if (phase === 'entering' && enteredIndex !== index) {
     setEnteredIndex(index)
     setIngredientSrc(pickIngredientVariant(assets.ingredients[fragrance.slug]))
-  }
-
-  // RF-07.6: se ignora fuera de `idle` (hay una transición en curso, RF-07.1 a RF-07.3) o si el
-  // giro de carga ya está en marcha (automático o repetido); `Bottle.spinIntro()` además no hace
-  // nada si el rig todavía no existe.
-  function handleStageClick(e) {
-    if (isReplayExcluded(e.target)) return
-    if (phase !== 'idle') return
-    if (bottleRef.current?.isSpinIntroBusy()) return
-    bottleRef.current?.spinIntro()
   }
 
   // Última vista (RF-06.7, RF-09.1): se guarda al abrir y cada vez que cambia la fragancia actual.
@@ -157,7 +141,7 @@ export default function ExpandedView({ assets, fragrances, initialSlug, storage,
   }
 
   return (
-    <div className="fs-stage" style={style} onClick={handleStageClick}>
+    <div className="fs-stage" style={style}>
       <Background src={assets.backgrounds[backgroundIndex % assets.backgrounds.length]} />
       <div className="fs-overlay" aria-hidden="true" />
       <div className="fs-content" aria-hidden="true">

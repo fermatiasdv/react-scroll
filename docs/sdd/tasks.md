@@ -30,7 +30,7 @@
 | T-4.4 | Prueba en Android de gama media | T-4.3 | hecha |
 | T-4.4-fix | Diagnóstico de rendimiento en Android de gama media | T-4.4 | hecha |
 | T-4.4-fix2 | Techo de pixelRatio en BottleRig | T-4.4-fix | hecha |
-| T-4.5 | Repetir el giro de carga al tocar la pantalla | T-4.1, T-4.3-fix | pendiente |
+| T-4.5 | Quitar el giro repetido al tocar la pantalla | T-4.1, T-4.3-fix | en verificación |
 | T-5.1 | Modo colapsado + abrir/cerrar simulados + última vista | T-3.3, T-4.2 | hecha |
 | T-5.1-fix | Salto entre póster y botella 3D al abrir el desplegado | T-5.1 | hecha |
 | T-5.1-fix2 | Bloqueo del hilo principal al abrir el desplegado | T-5.1-fix | bloqueada (sin mejora medible) |
@@ -38,6 +38,7 @@
 | T-5.3 | Sandbox: secciones de relleno | T-5.1 | hecha |
 | T-5.4 | Sandbox: quitar las secciones de relleno | T-5.3 | hecha |
 | T-5.5 | Variantes aleatorias de imagen de ingredientes | T-1.1, T-4.2 | hecha |
+| T-5.1-fix3 | Tocar la pantalla colapsada abre el modo desplegado | T-5.1 | en curso |
 | T-6.1 | Auditoría final contra la spec | todas | hecha |
 | T-7.x | Empaquetado en Tapcart | T1 de `ajustes.md` | bloqueada (sin acceso a Tapcart) |
 
@@ -280,18 +281,20 @@
   - **el usuario confirma visualmente** que el giro inicial gira a la misma velocidad que los giros de transición (una vuelta completa en 1000 ms) y que el ingrediente aparece al 80% (800 ms): ✅ (usuario: "funciona OK");
   - VE: sin `console.log` en `src/`/`tools/` ✅; `npm run test`, `npm run lint`, `npm run build` y `git status --porcelain` (archivos ⊆ permitidos) pendientes — el entorno de shell no respondió al intentar correrlos.
 
-### T-4.5: Repetir el giro de carga al tocar la pantalla
+### T-4.5: Quitar el giro repetido al tocar la pantalla
 
-- **Estado:** pendiente
+- **Estado:** en verificación
 - **Depende de:** T-4.1, T-4.3-fix
-- **Cubre:** RF-07.6, design §4.11
-- **Archivos permitidos:** `src/fragrance-scroll/components/ExpandedView.jsx`, `src/fragrance-scroll/components/Bottle.jsx`, `src/fragrance-scroll/styles/fragrance-scroll.css`, `tests/unit/expandedView.test.js` (nuevo, sólo si se extrae lógica pura testeable, p. ej. qué target del click queda excluido).
+- **Cubre:** RF-07.6 (eliminado), RF-02.4 (ajuste), design §4.11
+- **Contexto:** el código ya traía implementado el giro repetido al tocar la pantalla (`handleStageClick`/`isReplayExcluded` en `ExpandedView.jsx`, `spinIntro()`/`isSpinIntroBusy()` en `Bottle.jsx`), aunque esta tarea nunca se había cerrado como `hecha`. El usuario pidió lo contrario: tocar la pantalla fuera de la botella y de ✕ no debe hacer nada. Ver propuesta de cambio en el chat.
+- **Archivos permitidos:** `src/fragrance-scroll/components/ExpandedView.jsx`, `src/fragrance-scroll/components/Bottle.jsx`, `tests/unit/expandedView.test.js` (borrar: sólo probaba `isReplayExcluded`, que se elimina).
+- **Pasos:**
+  1. `ExpandedView.jsx`: sacar `onClick={handleStageClick}` de `.fs-stage`, y las funciones `handleStageClick` / `isReplayExcluded` (ya no las usa nadie).
+  2. `Bottle.jsx`: sacar `spinIntro()` e `isSpinIntroBusy()` de `useImperativeHandle` (quedan huérfanos: sólo los llamaba el handler que se elimina). El giro automático de carga (RF-07.5) sigue igual, porque usa `runSpinIntro()` internamente, no el método del ref.
 - **Aceptación:**
-  - **el usuario confirma visualmente:** tocar cualquier parte de la pantalla desplegada, fuera de la botella y de ✕, repite el giro completo con el ingrediente reapareciendo al 80%, sin cambiar de fragancia ni cerrar;
-  - tocar la botella sigue abriendo su link (RF-05.6) y no dispara un giro extra;
-  - tocar ✕ sigue cerrando y no dispara un giro extra;
-  - tocar durante una transición (RF-07.1 a RF-07.3) no hace nada;
-  - tocar mientras el giro de carga ya está en curso no lo reinicia ni superpone otro;
+  - tocar cualquier parte de la pantalla desplegada que no sea la botella ni ✕ no hace nada (no gira, no cambia nada);
+  - tocar la botella sigue abriendo su link (RF-05.6); tocar ✕ sigue cerrando (RF-06.6);
+  - el giro de carga inicial (RF-07.5) y el de las transiciones (RF-07.1/RF-07.2) siguen igual;
   - VE.
 
 ### T-4.4: Prueba en Android de gama media
@@ -450,6 +453,22 @@
   - **el usuario confirma visualmente** que, repitiendo el giro varias veces en una misma fragancia, aparecen las 3 variantes, sin mezclar ingredientes de otra fragancia;
   - VE.
 - **Resultado:** 226 tests (agrega 8: 2 de `ingredientVariant.test.js`, los demás por las 3 variantes en `data.test.js`/`preload.test.js`), lint y build en verde; `git status --porcelain` sólo tocó archivos permitidos de T-5.5 (más lo ya modificado antes de empezar: `Bottle.jsx`, `fragrance-scroll.css`, `tests/unit/expandedView.test.js`, que no son de esta tarea); sin `console.log` en `src/`/`tools/`. El usuario confirmó visualmente que anda bien ("quedo OK").
+
+### T-5.1-fix3: Tocar la pantalla colapsada abre el modo desplegado
+
+- **Estado:** en curso
+- **Depende de:** T-5.1
+- **Cubre:** RF-08.4 (modificado)
+- **Archivos permitidos:** `src/fragrance-scroll/components/CollapsedView.jsx`, `src/fragrance-scroll/components/ShowButton.jsx`, `src/fragrance-scroll/styles/fragrance-scroll.css`.
+- **Contexto:** hoy sólo el botón "Show fragrances" dispara `openExpanded`; el resto de la pantalla colapsada es inerte. Se pide que cualquier toque sobre esa pantalla haga lo mismo, sin perder el botón.
+- **Pasos:**
+  1. En `CollapsedView.jsx`, mover el handler `onOpenExpanded` al contenedor raíz de la pantalla colapsada (`onClick`/`onPointerUp`, según cómo esté armado hoy).
+  2. `ShowButton.jsx` deja de necesitar su propio `onClick` para abrir (o lo conserva, pero sin duplicar la apertura: un click en el botón no debe disparar dos veces por bubbling).
+  3. Ajustar `fragrance-scroll.css` sólo si hace falta (por ejemplo `cursor: pointer` en el contenedor).
+- **Aceptación:**
+  - tocar cualquier parte de la pantalla colapsada (fondo, título, botella/póster, botón) abre el desplegado en la fragancia mostrada;
+  - el botón sigue siendo visible y accesible (RNF-06);
+  - VE.
 
 ## Fase 6: cierre
 

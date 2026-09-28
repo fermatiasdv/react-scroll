@@ -228,12 +228,11 @@ rig.dispose();                                       // libera el renderer al de
   - Muestra `Background`, `Bottle` (uno solo), `IngredientImage`, `Panel` y `CloseButton`.
   - Guarda la última vista en cada cambio de `index` (RF-06.7).
   - La coreografía de RF-07 se deriva de `phase`: en `leaving`, la botella hace `spin` de salida y el ingrediente sale; en `entering` (o sea en el `SWAP`), `setLabel` + `spin` de entrada, y entran el ingrediente y el panel.
-  - Cuando la imagen de ingrediente pasa a visible (RF-07.2, RF-07.5, RF-07.6) elige al azar una de las 3 variantes de `assets.ingredients[slug]` (RF-02.4).
-  - Un click/tap en `.fs-stage` que no sea sobre la botella ni sobre `CloseButton` repite el giro de carga de `Bottle` (RF-07.6); se ignora si `phase !== 'idle'` o si ya hay un giro de carga en curso.
+  - Cuando la imagen de ingrediente pasa a visible (RF-07.2, RF-07.5) elige al azar una de las 3 variantes de `assets.ingredients[slug]` (RF-02.4).
 - **`Bottle.jsx`**
   - Crea el canvas **una vez** y el `BottleRig` en un `useEffect`.
   - Muestra `BottlePoster` encima hasta `onFirstFrame`.
-  - Expone por `ref` imperativo `spinOut()`, `swapAndSpinIn(labelUrl)`, `spinIntro()`, `setSize()` y si el giro de carga está en curso (para que RF-07.6 sepa cuándo ignorar el toque).
+  - Expone por `ref` imperativo `spinOut()`, `swapAndSpinIn(labelUrl)` y `setSize()`.
   - Lleva el link de la botella (AJUSTE-03), resuelto en una función `bottleLinkHref(slug)`.
 - **`Background.jsx`**
   - Dos `<div>` que alternan roles; anima sólo `opacity` (RF-07.1).
