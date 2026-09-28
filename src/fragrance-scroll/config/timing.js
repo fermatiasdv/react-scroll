@@ -13,7 +13,7 @@ export const LABEL_TRANSITION_MS = 350
 export const WORD_FADE_MS = 300
 
 // L:scroll-bottle.js
-export const SPIN_DURATION_MS = 2000
+export const SPIN_DURATION_MS = 1000
 export const SPIN_REVEAL_FRACTION = 0.8
 export const easeInCubic = (t) => t * t * t
 export const easeOutCubic = (t) => 1 - (1 - t) ** 3

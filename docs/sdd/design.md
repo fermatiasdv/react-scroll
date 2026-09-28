@@ -99,7 +99,7 @@ export const DEFAULT_ASSETS = {
 ```js
 export const COLLAPSE_TO_CENTER_MS = 500;
 export const LOCK_MS = 50;
-export const SPIN_DURATION_MS = 2000;
+export const SPIN_DURATION_MS = 1000;
 export const SPIN_REVEAL_FRACTION = 0.8;
 export const BACKGROUND_TRANSITION_MS = 500;
 export const LABEL_TRANSITION_MS = 350;

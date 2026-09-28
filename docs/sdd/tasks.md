@@ -26,6 +26,7 @@
 | T-4.1 | `useNavigation`: swipe, rueda, teclado y timers | T-1.4, T-2.2 | hecha |
 | T-4.2 | Coreografía de la transición | T-3.2, T-4.1 | hecha |
 | T-4.3 | Giro de carga inicial | T-4.2 | hecha |
+| T-4.3-fix | Igualar la velocidad del giro de carga inicial a la de la transición | T-4.3 | pendiente |
 | T-4.4 | Prueba en Android de gama media | T-4.3 | hecha |
 | T-4.4-fix | Diagnóstico de rendimiento en Android de gama media | T-4.4 | hecha |
 | T-4.4-fix2 | Techo de pixelRatio en BottleRig | T-4.4-fix | hecha |
@@ -265,6 +266,17 @@
 - **Cubre:** RF-07.5
 - **Archivos permitidos:** `src/fragrance-scroll/components/{ExpandedView,Bottle,IngredientImage,Panel}.jsx`.
 - **Aceptación:** **el usuario confirma visualmente** el giro de 2 s con el ingrediente apareciendo al 80%; VE.
+
+### T-4.3-fix: Igualar la velocidad del giro de carga inicial a la de la transición
+
+- **Estado:** pendiente
+- **Depende de:** T-4.3
+- **Cubre:** RF-07.5 (modificado)
+- **Archivos permitidos:** `src/fragrance-scroll/config/timing.js`.
+- **Pasos:** cambiar `SPIN_DURATION_MS` de `2000` a `1000`.
+- **Aceptación:**
+  - **el usuario confirma visualmente** que el giro inicial gira a la misma velocidad que los giros de transición (una vuelta completa en 1000 ms) y que el ingrediente aparece al 80% (800 ms);
+  - VE.
 
 ### T-4.4: Prueba en Android de gama media
 

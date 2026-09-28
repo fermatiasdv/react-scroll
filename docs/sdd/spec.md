@@ -126,7 +126,7 @@ Al pasar de la fragancia A a la B (`L:scroll-motor.js`, `goToIndex`; `L:scroll-s
   - y el panel de A sale mientras entra el de B, en paralelo, según RF-04.3 (`L:scroll-styles.js`, `transitionDisplay`).
 - **RF-07.3** **En t = 550 ms** se libera el bloqueo (RF-06.4) y se procesa la salida encolada, si la hay (RF-06.5).
 - **RF-07.4** Si el modo desplegado se cierra durante una transición, la transición se cancela sin efectos colaterales: no quedan timers ni animaciones vivas.
-- **RF-07.5** **Carga inicial** del modo desplegado (y rearmado por resize): la botella hace un giro completo de frente a frente en `SPIN_DURATION_MS = 2000` con `easeInOutCubic`. La imagen de ingrediente aparece al 80% del giro (`SPIN_REVEAL_FRACTION = 0.8`, o sea a los 1600 ms). El panel aparece según RF-04.3. Este camino es **distinto** del de RF-07.1 a RF-07.3, igual que en el legacy (`setDisplayInstant`).
+- **RF-07.5** **Carga inicial** del modo desplegado (y rearmado por resize): la botella hace un giro completo de frente a frente en `SPIN_DURATION_MS = 1000` con `easeInOutCubic` — la misma velocidad angular que los medios giros de RF-07.1/RF-07.2 (500 ms cada uno). La imagen de ingrediente aparece al 80% del giro (`SPIN_REVEAL_FRACTION = 0.8`, o sea a los 800 ms). El panel aparece según RF-04.3. Este camino es **distinto** del de RF-07.1 a RF-07.3, igual que en el legacy (`setDisplayInstant`); a diferencia del legacy, esta duración **no** es literal (el legacy usa 2000 ms) — es un pedido posterior del usuario para unificar la velocidad de giro.
 
 ### RF-08: Modo colapsado (bloque en la home)
 
